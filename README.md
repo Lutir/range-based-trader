@@ -64,36 +64,47 @@ streamlit run src/range_scanner/dashboard/app.py
 
 ## Dashboard
 
-A full Streamlit web interface with 5 pages:
+A full Streamlit web interface that replaces the CLI for everyday use.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                                                                     │
-│  ◐ Range Scanner                                                    │
-│  ─────────────────                                                  │
-│                                                                     │
-│  Scanner        Scan any universe. Interactive results table.       │
-│                 Progress bar. Narratives for top picks.             │
-│                                                                     │
-│  Ticker Detail  Deep-dive any ticker. All scores, risk flags,       │
-│                 price chart, position-in-range bar, score breakdown. │
-│                                                                     │
-│  Charts         Gallery of exported candlestick PNGs.               │
-│                 Filter by ticker or verdict.                        │
-│                                                                     │
-│  Backtest       Did the scanner's ranges actually hold?             │
-│                 Structure persistence test with hold-rate metrics.  │
-│                                                                     │
-│  Settings       API keys, thresholds, reference docs.               │
-│                 "What is range trading?" explainer built in.        │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-Launch with:
 ```bash
 streamlit run src/range_scanner/dashboard/app.py
 ```
+
+### Scanner Page — Pick a universe, click scan, explore results
+
+<img src="docs/images/dashboard_scanner.png" width="700" alt="Scanner Page">
+
+- Universe dropdown with 22 pre-built lists
+- Custom ticker paste support
+- Progress bar with live status
+- Interactive sortable results table
+- Expandable AI narratives for top picks
+
+### Ticker Detail — Deep-dive any single stock
+
+<img src="docs/images/dashboard_detail.png" width="700" alt="Ticker Detail Page">
+
+- All scores and metrics with help tooltips
+- Colored verdict banner with full reason string
+- AI narrative analysis in plain English
+- Position-in-range visual indicator
+- Inline price chart with support/resistance lines
+- Risk warning banner (appears when HIGH risk detected)
+- Full score breakdown table
+
+### Settings — Configure everything visually
+
+<img src="docs/images/dashboard_settings.png" width="700" alt="Settings Page">
+
+- API key management
+- Scanner threshold configuration with explanations
+- "What is range trading?" reference built in
+- Verdict and score glossary
+
+### Also includes:
+
+- **Charts** — Gallery view of exported candlestick PNGs with filter
+- **Backtest** — Run structure persistence tests, see hold-rate metrics
 
 Japandi-styled: warm linen background, sage green accents, Inter + JetBrains Mono typography. Designed following 50 research-backed [design rules](DESIGN_RULES.md).
 

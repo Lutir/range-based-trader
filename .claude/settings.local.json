@@ -14,7 +14,13 @@
       "Bash(awk '{print $1\" \"$2}')",
       "Bash(awk '{print $NF, $5}')",
       "Bash(npx --version)",
-      "Bash(streamlit run *)"
+      "Bash(streamlit run *)",
+      "Bash(cp \"/Users/rituljai/Desktop/Screenshot 2026-05-09 at 3.11.45 AM.png\" docs/images/dashboard_scanner.png)",
+      "Bash(cp \"/Users/rituljai/Desktop/Screenshot 2026-05-09 at 3.11.55 AM.png\" docs/images/dashboard_detail.png)",
+      "Bash(cp \"/Users/rituljai/Desktop/Screenshot 2026-05-09 at 3.12.13 AM.png\" docs/images/dashboard_settings.png)",
+      "Bash(cp ~/Desktop/Screen*3.11.45*.png docs/images/dashboard_scanner.png)",
+      "Bash(cp ~/Desktop/Screen*3.11.55*.png docs/images/dashboard_detail.png)",
+      "Bash(cp ~/Desktop/Screen*3.12.13*.png docs/images/dashboard_settings.png)"
     ]
   }
 }
