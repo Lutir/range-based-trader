@@ -128,6 +128,32 @@ def render():
     </div>
     """, unsafe_allow_html=True)
 
+    # AI-style narrative reasoning
+    from range_scanner.reasoning import generate_narrative
+    from range_scanner.models import TickerScanResult as TSR, BreakoutRisk, SetupType
+    narrative_result = TSR(
+        ticker=ticker, score=breakdown.total, verdict=verdict,
+        entry_quality=entry_qual, position_in_range=round(position, 3),
+        edge_position=edge_pos, breakout_risk=b_risk,
+        support=structure.support, resistance=structure.resistance,
+        range_width_pct=structure.range_width_pct,
+        support_touches=structure.support_touches, resistance_touches=structure.resistance_touches,
+        containment_ratio=structure.containment_ratio,
+        latest_close=latest_close, rotation_count=structure.rotation_count,
+        gap_frequency=round(gap_freq, 4), compression_label=comp_label,
+        days_to_earnings=None, earnings_risk=None,
+        short_pct_float=None, short_interest_risk=None,
+    )
+    narrative = generate_narrative(narrative_result)
+
+    st.markdown("## Analysis")
+    st.markdown(f"""
+    <div style="background: #F5F2EE; border-left: 3px solid #5B8A72; padding: 20px 24px;
+                border-radius: 0 10px 10px 0; margin: 16px 0; line-height: 1.8; color: #2D2A26; font-size: 0.95rem;">
+        {narrative}
+    </div>
+    """, unsafe_allow_html=True)
+
     # Three main scores
     st.markdown("## Scores")
     sc1, sc2, sc3, sc4 = st.columns(4)

@@ -280,6 +280,7 @@ def render():
             ranked = sorted(passed, key=lambda r: r.score, reverse=True)[:top_n]
             if ranked:
                 _render_results_table(ranked)
+                _render_narratives(ranked[:10])
             else:
                 st.info("No range candidates found. Try a different universe or lower the filters.")
 
@@ -358,3 +359,27 @@ def _render_results_table(results: list[TickerScanResult]):
         <strong>Gaps%</strong> = Frequency of >2% overnight gaps (lower = better for range trading)
     </div>
     """, unsafe_allow_html=True)
+
+
+def _render_narratives(results: list[TickerScanResult]):
+    """Show AI-style narrative analysis for top results."""
+    from range_scanner.reasoning import generate_narrative
+
+    st.markdown("")
+    with st.expander("📝 Detailed Analysis (top 10)", expanded=False):
+        for r in results:
+            if r.skip_reason:
+                continue
+            narrative = generate_narrative(r)
+            verdict_display = r.verdict.value.replace("_", " ")
+
+            st.markdown(f"""
+            <div style="background: #F5F2EE; border-left: 3px solid #5B8A72; padding: 16px 20px;
+                        border-radius: 0 8px 8px 0; margin: 12px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight: 600; font-size: 1rem; color: #2D2A26;">{r.ticker}</span>
+                    <span style="font-size: 0.8rem; color: #7A756E;">{verdict_display} · Score {r.score:.0f} · Entry {r.entry_quality:.0f if r.entry_quality else 0}</span>
+                </div>
+                <p style="margin: 0; line-height: 1.7; color: #4A4540; font-size: 0.9rem;">{narrative}</p>
+            </div>
+            """, unsafe_allow_html=True)
