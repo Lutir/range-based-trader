@@ -340,6 +340,64 @@ Uses yfinance to check next earnings date. Binary events destroy range structure
     Example reason: "earnings in 3d (HIGH RISK)"
 ```
 
+### False-Break Detection
+
+Counts "fakeouts" — price breaks a level then snaps back inside, validating the zone.
+
+```
+    EXAMPLE (bull trap at resistance):
+      Resistance = $110.
+      Day X: high reaches $112 (broke above!)
+      But close = $109 (came back inside).
+      → Bull trap. Resistance is confirmed strong.
+
+    EXAMPLE (bear trap at support):
+      Support = $100.
+      Day Y: low drops to $98 (broke below!)
+      But close = $101 (recovered).
+      → Bear trap. Support is confirmed strong.
+
+    More false breaks = more validated zones = higher confidence.
+    Reason: "6 false breaks (zones validated)"
+```
+
+### Volume Profile
+
+Approximates where most trading volume is concentrated within the range.
+
+```
+    Think of the range as a parking garage with 5 floors:
+
+    BALANCED         Volume spread evenly → healthy auction
+    HIGH_AT_SUPPORT  Most cars on floor 1 → strong buying at floor
+    HIGH_AT_RESISTANCE  Most cars on top floor → strong selling at ceiling
+    THIN_MIDDLE      Edges full, middle empty → could break through middle easily
+```
+
+---
+
+## Validation Tools
+
+### Human Labeling
+
+After visual review, label tickers in `validation/labels.csv`:
+
+```bash
+python validation/validate.py results/nasdaq100.csv
+```
+
+Labels to use: `CLEAN_RANGE`, `CORRECT_REJECT`, `FALSE_POSITIVE`, `FALSE_NEGATIVE`, `BREAKOUT_CANDIDATE`, `VALID_BUT_WIDE`, `MESSY_BUT_TRADEABLE`
+
+### Structure Backtest
+
+Tests whether detected ranges actually held over the next N trading days:
+
+```bash
+python validation/backtest.py results/nasdaq100.csv --days 10
+```
+
+Not a trading backtest — a structure-persistence test. Reports what % of "excellent range" picks stayed inside their bands.
+
 ---
 
 ## Chart Export
