@@ -1,456 +1,299 @@
-# Range Candidate Scanner
+<p align="center">
+  <img src="docs/images/chart_adsk.png" width="700" alt="Range Scanner Chart — ADSK">
+</p>
 
-A professional-grade CLI tool that scans stock tickers for range-bound structure, classifies the current state of each range, assesses market context, and outputs actionable setup types.
+<h1 align="center">Range Scanner</h1>
 
-This is a **market-structure filter and setup classifier** — not a trading bot or prediction system.
+<p align="center">
+  <strong>Market structure filter that finds stocks trading in clean ranges<br>
+  and tells you what to do about it.</strong>
+</p>
 
-```
-                                    RANGE SCANNER
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │                                                                     │
-    │   Tickers ──► Structure Detection ──► State Classification          │
-    │                                              │                      │
-    │                                              ▼                      │
-    │              Market Context ──────► Setup Classification             │
-    │              (SPY/QQQ/Sector)                 │                      │
-    │                                              ▼                      │
-    │                                    Ranked Results + Charts           │
-    │                                                                     │
-    └─────────────────────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <em>Not a trading bot. Not a prediction engine. A decision-support tool.</em>
+</p>
 
----
-
-## What It Answers
-
-The scanner provides four layers of analysis per ticker:
-
-```
-    ┌──────────────────────────────────────────────────────────────┐
-    │  Layer 1: RANGE QUALITY                                      │
-    │  "Is this chart structurally range-bound?"                   │
-    │  ─────────────────────────────────────────                   │
-    │  Rotation count, reaction strength, containment,             │
-    │  tightness, range width, trend leakage                       │
-    ├──────────────────────────────────────────────────────────────┤
-    │  Layer 2: ENTRY QUALITY                                      │
-    │  "Is price at a useful edge right now?"                      │
-    │  ─────────────────────────────────────────                   │
-    │  Position in range, edge proximity, breakout risk            │
-    ├──────────────────────────────────────────────────────────────┤
-    │  Layer 3: CONTEXT QUALITY                                    │
-    │  "Does the market/sector environment support this?"          │
-    │  ─────────────────────────────────────────                   │
-    │  Market regime, sector trend, relative strength vs SPY       │
-    ├──────────────────────────────────────────────────────────────┤
-    │  Layer 4: SETUP TYPE                                         │
-    │  "What kind of setup is this, if any?"                       │
-    │  ─────────────────────────────────────────                   │
-    │  Mean reversion long/short, breakout watch,                  │
-    │  monitor only, avoid context conflict                        │
-    └──────────────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <a href="#quick-start">Quick Start</a> ·
+  <a href="#dashboard">Dashboard</a> ·
+  <a href="#how-it-works">How It Works</a> ·
+  <a href="#examples">Examples</a> ·
+  <a href="#universes">Universes</a>
+</p>
 
 ---
 
-## Install
+## What It Does
+
+Given a list of stock tickers, the scanner answers **four questions** for each one:
+
+| Question | Output | Example |
+|----------|--------|---------|
+| Is this a clean range? | Range Score (0-100) | ADSK: **81** |
+| Is the entry timing good? | Entry Quality (0-100) | TMO near support: **76** |
+| Does the market support this? | Context Score (0-100) | Calm market + stable sector: **75** |
+| What should I actually do? | Setup Type | `BREAKOUT_WATCH_UPSIDE` |
+
+Then it explains **why** in plain English:
+
+> *"ADSK shows a well-defined range between $229 and $247 (8.1% width). Price has rotated 6 times. Currently pressing resistance — with XLK trending up in a risk-on market, this looks more like a breakout setup than a mean-reversion short."*
+
+---
+
+## Quick Start
 
 ```bash
+# Install
 pip install -e ".[dev]"
+
+# Add your Alpaca API keys
+cp .env.example .env
+# Edit .env with your keys (free paper account works)
+
+# Run a scan
+python -m range_scanner --universe nasdaq100 --output results.csv
+
+# With market context + chart export
+python -m range_scanner --universe nasdaq100 --context --charts --top 20
+
+# Launch the dashboard
+streamlit run src/range_scanner/dashboard/app.py
 ```
-
-## Setup
-
-Create a `.env` file:
-
-```env
-ALPACA_API_KEY=your_key
-ALPACA_SECRET_KEY=your_secret
-ALPACA_BASE_URL=https://data.alpaca.markets
-```
-
-Free [Alpaca](https://alpaca.markets/) paper trading account works.
 
 ---
 
-## Usage
+## Dashboard
 
-### Basic scan
+A full Streamlit web interface with 5 pages:
 
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│  ◐ Range Scanner                                                    │
+│  ─────────────────                                                  │
+│                                                                     │
+│  Scanner        Scan any universe. Interactive results table.       │
+│                 Progress bar. Narratives for top picks.             │
+│                                                                     │
+│  Ticker Detail  Deep-dive any ticker. All scores, risk flags,       │
+│                 price chart, position-in-range bar, score breakdown. │
+│                                                                     │
+│  Charts         Gallery of exported candlestick PNGs.               │
+│                 Filter by ticker or verdict.                        │
+│                                                                     │
+│  Backtest       Did the scanner's ranges actually hold?             │
+│                 Structure persistence test with hold-rate metrics.  │
+│                                                                     │
+│  Settings       API keys, thresholds, reference docs.               │
+│                 "What is range trading?" explainer built in.        │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+Launch with:
 ```bash
-python -m range_scanner --tickers tickers.txt --output results.csv
+streamlit run src/range_scanner/dashboard/app.py
 ```
 
-### Universe scan with context
-
-```bash
-python -m range_scanner --universe nasdaq100 --context --output results/nasdaq100.csv --top 20
-```
-
-### With chart export
-
-```bash
-python -m range_scanner --universe nasdaq100 --context --charts --top 10
-```
-
-### Options
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--tickers` | `tickers.txt` | Path to ticker file |
-| `--universe` | — | Built-in universe: `personal`, `nasdaq100`, `etfs` |
-| `--lookback` | `120` | Number of daily candles |
-| `--output` | `results.csv` | CSV output path |
-| `--min-volume` | `1000000` | Min average daily volume |
-| `--min-dollar-volume` | `20000000` | Min average dollar volume |
-| `--top` | `20` | Results to display |
-| `--charts` | off | Export PNG charts for top candidates |
-| `--charts-dir` | `charts/` | Chart output directory |
-| `--context` | off | Add market/sector context layer |
+Japandi-styled: warm linen background, sage green accents, Inter + JetBrains Mono typography. Designed following 50 research-backed [design rules](DESIGN_RULES.md).
 
 ---
 
-## Built-in Universes
+## Examples
+
+### Excellent Range — ADSK
+
+<img src="docs/images/chart_adsk.png" width="700" alt="ADSK Range Chart">
 
 ```
-universes/
-  personal.txt      Your watchlist
-  nasdaq100.txt     Nasdaq-100 components
-  etfs.txt          Major ETFs (sector, bond, commodity)
+ADSK | EXCELLENT_RANGE | Score 81 | Entry 66 | Near Resistance
+Range: $229 – $247 | Width: 8.1% | Rotations: 6
+Reason: 6 rotations (strong); width 8.1% (good); strong reactions;
+        5 false breaks (zones validated); volume concentrated at resistance
 ```
+
+**Narrative:** *"This is a high-quality range structure. ADSK is trading in a well-sized range between $229 and $247. Price has rotated 6 times. Currently pressing resistance — in a risk-on market with XLK trending up, this looks more like a breakout setup than a mean-reversion short."*
 
 ---
 
-## Output Example
+### Range Pressing Resistance with Squeeze Risk — GME
+
+<img src="docs/images/chart_gme.png" width="700" alt="GME Range Chart">
 
 ```
-Market regime: RISK ON TRENDING
-  SPY ADX=22.2 slope=6.95% | QQQ ADX=36.9 slope=11.23%
-
-┌───┬────────┬─────┬─────┬─────┬───────────────────────┬────────────────┬─────────────┐
-│ # │ Ticker │ Rng │ Ent │ Ctx │ Setup                 │ Edge           │ Range       │
-├───┼────────┼─────┼─────┼─────┼───────────────────────┼────────────────┼─────────────┤
-│ 1 │ ADSK   │  81 │  66 │  75 │ BREAKOUT WATCH UPSIDE │ NEAR RESIST.   │ 229–247     │
-│ 2 │ GME    │  78 │  41 │  55 │ RANGE MONITOR ONLY    │ UPPER HALF     │ 22.5–25.0   │
-│ 3 │ TMO    │  65 │  76 │  25 │ AVOID CONTEXT CONFL.  │ NEAR SUPPORT   │ 457–525     │
-│ 4 │ NVDA   │  40 │   0 │   0 │ NOT RANGE TRADE       │ BROKEN UP      │ 177–194     │
-└───┴────────┴─────┴─────┴─────┴───────────────────────┴────────────────┴─────────────┘
+GME | EXCELLENT_RANGE | Score 78 | Entry 41 | Upper Half
+Range: $22.5 – $25.0 | Width: 10.9% | Rotations: 7
+Short Interest: 15.1% | Days to Cover: 9.8
+Reason: 7 rotations (strong); 27 false breaks (zones validated);
+        volume balanced; SI 15% float (HIGH crowding)
 ```
 
-### Reading the scores
-
-```
-    Rng = Range Quality (0-100)     "Is the structure good?"
-    Ent = Entry Quality (0-100)     "Is the timing good?"
-    Ctx = Context Score (0-100)     "Is the environment supportive?"
-```
+**Narrative:** *"GME is trading in a somewhat wide range between $22 and $25. 7 rotations over months confirm both zones. 27 false breaks — this range has been heavily tested. However, high short interest (15% of float) creates squeeze risk near resistance."*
 
 ---
 
-## Verdicts
+### Correctly Rejected — MSFT (Trending)
+
+<img src="docs/images/chart_msft.png" width="700" alt="MSFT Trending Chart">
 
 ```
-    EXCELLENT_RANGE             Clean structure, active, tradable
-    RANGE_PRESSING_RESISTANCE   Valid range, price near upper zone
-    RANGE_PRESSING_SUPPORT      Valid range, price near lower zone
-    WATCHLIST                   Decent range, not at an edge
-    WIDE_RANGE                  15-25% width — watchlist only
-    MESSY_RANGE                 Weak structure
-    BROKEN_UP                   Price exited above resistance
-    BROKEN_DOWN                 Price exited below support
-    TOO_WIDE                    >25% width — rejected
-    TRENDING_NOT_RANGE          ADX/slope/leakage too high
-    ILLIQUID                    Below volume thresholds
+MSFT | TRENDING_NOT_RANGE | Score 50 | Entry 0 | Broken Up
+Reason: Only 1 rotation (weak); width 24% (too wide);
+        EMA slope 8.8% (directional); BROKEN above resistance
 ```
 
----
-
-## Setup Types
-
-When `--context` is enabled, each ticker gets a setup classification:
-
-```
-    ┌─────────────────────────────────────────────────────────────────┐
-    │                                                                 │
-    │  MEAN_REVERSION_LONG                                            │
-    │  Near support + favorable context + acceptable RS               │
-    │                                                                 │
-    │  MEAN_REVERSION_SHORT                                           │
-    │  Near resistance + calm market + low breakout risk              │
-    │                                                                 │
-    │  BREAKOUT_WATCH_UPSIDE                                          │
-    │  Near resistance + risk-on market + sector trending up          │
-    │                                                                 │
-    │  BREAKDOWN_WATCH_DOWNSIDE                                       │
-    │  Near support + high breakdown risk + volume elevated           │
-    │                                                                 │
-    │  RANGE_MONITOR_ONLY                                             │
-    │  Valid range but mid-range or no clear directional edge         │
-    │                                                                 │
-    │  AVOID_CONTEXT_CONFLICT                                         │
-    │  Edge exists but context fights the setup                       │
-    │  (e.g. near support but badly underperforming in risk-on)       │
-    │                                                                 │
-    │  NOT_RANGE_TRADE                                                │
-    │  Broken, trending, or structurally invalid                      │
-    │                                                                 │
-    └─────────────────────────────────────────────────────────────────┘
-```
+**Narrative:** *"MSFT is currently trending rather than range-bound. Despite detecting some boundaries, the directional momentum is too strong for reliable range trading."*
 
 ---
 
 ## How It Works
 
 ```
-    ┌───────────────────────────────────────────────────────────────────┐
-    │                         DATA LAYER                                │
-    │  Alpaca API ──► Daily OHLCV ──► Paginated fetch ──► Last N bars  │
-    └─────────────────────────────────┬─────────────────────────────────┘
-                                      │
-    ┌─────────────────────────────────▼─────────────────────────────────┐
-    │                      STRUCTURE DETECTION                          │
-    │                                                                   │
-    │  Pivot highs/lows (window=3)                                      │
-    │       │                                                           │
-    │       ▼                                                           │
-    │  Cluster into zones (ATR-adjusted tolerance)                      │
-    │       │                                                           │
-    │       ▼                                                           │
-    │  Select support/resistance (recency-weighted)                     │
-    │       │                                                           │
-    │       ▼                                                           │
-    │  Measure: touches, reactions, rotations, containment, tightness   │
-    │       │                                                           │
-    │       ▼                                                           │
-    │  Detect: trend leakage (HH/HL patterns)                          │
-    └─────────────────────────────────┬─────────────────────────────────┘
-                                      │
-    ┌─────────────────────────────────▼─────────────────────────────────┐
-    │                         SCORING                                   │
-    │                                                                   │
-    │  Rotation (20%) + Reaction (10%) + Containment (10%)              │
-    │  + Tightness (8%) + Width (7%) + Touches (10%)                    │
-    │  + ADX (10%) + EMA slope (5%) + Trend leakage (10%)               │
-    │  + Liquidity (5%) + ATR stability (5%)                            │
-    │                                                                   │
-    │  Hard caps: >25% width = max 30, >15% = max 50, <2 rot = max 55  │
-    └─────────────────────────────────┬─────────────────────────────────┘
-                                      │
-    ┌─────────────────────────────────▼─────────────────────────────────┐
-    │                    STATE CLASSIFICATION                           │
-    │                                                                   │
-    │  Position in range ──► Edge position ──► Breakout risk            │
-    │                                                                   │
-    │  Recent validity: BROKEN_UP / BROKEN_DOWN / STALE / ACTIVE        │
-    └─────────────────────────────────┬─────────────────────────────────┘
-                                      │
-    ┌─────────────────────────────────▼─────────────────────────────────┐
-    │                    CONTEXT LAYER (--context)                      │
-    │                                                                   │
-    │  Market regime (SPY/QQQ ADX + slope)                              │
-    │  Sector regime (sector ETF trend)                                 │
-    │  Relative strength vs SPY (20-day)                                │
-    │       │                                                           │
-    │       ▼                                                           │
-    │  Setup type classification                                        │
-    │  Context score                                                    │
-    └───────────────────────────────────────────────────────────────────┘
+  DATA             STRUCTURE           STATE              CONTEXT           OUTPUT
+  ────             ─────────           ─────              ───────           ──────
+
+  Alpaca API       Pivot detection     Position in        Market regime     Verdict
+  Daily OHLCV      Zone clustering     range (0-1)        (SPY/QQQ)         Setup type
+  Paginated        Rotations           Edge position      Sector trend      Narrative
+  Concurrent       Reactions           Breakout risk      Relative str.     Score
+  Cached           Tightness           Entry quality      Earnings risk     Chart
+                   False breaks                           Short interest
+                   Volume profile
+                   Containment
+                   Trend leakage
+                   Gap frequency
+                   Compression
 ```
 
----
+### Scoring (Range Quality)
 
-## Scoring Deep Dive
+| Component | Weight | What it measures |
+|-----------|--------|------------------|
+| Rotation count | 20% | Full oscillations between zones (THE key metric) |
+| Reaction strength | 10% | How strongly price bounces after touching a zone |
+| Containment | 10% | % of closes that stayed inside the range |
+| Tightness | 8% | Whether price uses the full range, not just middle |
+| Range width | 7% | 3-8% is ideal for swing trading |
+| Support touches | 5% | Confirmed reactions at support |
+| Resistance touches | 5% | Confirmed reactions at resistance |
+| ADX | 10% | Trend strength (lower = more sideways = better) |
+| EMA slope | 5% | Directional drift (flatter = better) |
+| Trend leakage | 10% | Higher-highs/lows pattern (less = better) |
+| Liquidity | 5% | Dollar volume above threshold |
+| ATR stability | 5% | Daily volatility in usable range (1-6%) |
 
-### Range Quality Score (0-100)
-
-```
-    Component               Weight    What scores high
-    ─────────────────────   ──────    ─────────────────────────────
-    Rotation count          20%       8+ full rotations between zones
-    Reaction strength       10%       Strong reversals after touches
-    Containment ratio       10%       85%+ closes inside range
-    Tightness               8%        Full range utilization (not midpoint clustering)
-    Range width             7%        3-8% ideal sweet spot
-    Support touches         5%        4+ confirmed reactions
-    Resistance touches      5%        4+ confirmed reactions
-    ADX                     10%       Below 20 (no trend)
-    EMA slope               5%        Below 2% (flat)
-    Trend leakage           10%       No HH/HL or LH/LL pattern
-    Liquidity               5%        Dollar volume well above threshold
-    ATR stability           5%        1-6% daily range
-```
-
-### Entry Quality Score (0-100)
+### Hard Gates
 
 ```
-    Near edge (support or resistance)     = high
-    Mid-range                             = low
-    High breakout risk at the edge        = penalized
-    Broken out of range                   = zero
-```
-
-### Context Score (0-100)
-
-```
-    Calm market + stable sector + good RS      = 80-100
-    Risk-on + sector trending with setup       = 65-80
-    Mixed signals                              = 40-60
-    Context fights the setup                   = 0-25
+Range width > 25%     →  Score capped at 30, verdict TOO_WIDE
+Range width > 15%     →  Score capped at 50, verdict WIDE_RANGE
+Rotations < 2         →  Score capped at 55
+Price above resistance →  BROKEN_UP
+Price below support    →  BROKEN_DOWN
+ADX > 30              →  TRENDING_NOT_RANGE
 ```
 
 ---
 
 ## Risk Layers
 
-### Gap Frequency
+| Risk | Source | What it catches |
+|------|--------|-----------------|
+| **Gap frequency** | OHLCV data | Stocks that teleport past support/resistance overnight |
+| **Compression** | ATR(5)/ATR(20) | Volatility coiling before breakout |
+| **Earnings** | yfinance | Binary events that destroy range structure |
+| **Short interest** | yfinance | Squeeze risk at resistance, crowding |
+| **False breaks** | OHLCV data | Fakeouts that validate zones (positive signal) |
+| **Volume profile** | OHLCV data | Where trading acceptance lives |
 
-Stocks that frequently gap overnight are unreliable for range trading because support/resistance becomes less meaningful when price teleports past zones.
+---
 
-```
-    gap_frequency = % of days with >2% overnight gap
+## Universes
 
-    >15%  = "frequent gaps" — flag in reason
-    8-15% = "moderate gap risk" — warning
-    <8%   = acceptable
-```
+22 pre-built ticker lists organized by scanning strategy:
 
-### Volatility Compression / Expansion
+| Universe | Tickers | Best for |
+|----------|---------|----------|
+| `utilities` | ~40 | Classically range-bound, lowest ADX sector |
+| `dividend_aristocrats` | ~55 | Yield floor creates repeatable bands |
+| `low_volatility` | ~50 | Slow movers, S/R persists months |
+| `reits` | ~55 | Rate-driven, tight ranges |
+| `nasdaq100` | ~90 | Broad liquid tech/growth |
+| `sp500` | ~470 | Comprehensive large-cap scan |
+| `consumer_staples` | ~45 | Defensive, steady ranges |
+| `semiconductors` | ~50 | Volatile but defined channels |
+| `meme_speculative` | ~40 | Post-squeeze resting phases |
+| `high_short_interest` | ~45 | Squeeze potential near resistance |
+| `sector_etfs` | ~100 | Less event-driven than single stocks |
+| `ai_robotics` | ~50 | Post-hype consolidations |
+| + 10 more | | cannabis, biotech, clean energy, etc. |
 
-Measures ATR(5) / ATR(20) to detect whether a stock is coiling (pre-breakout) or becoming chaotic.
-
-```
-    ratio < 0.7  = COMPRESSING  (volatility coiling — breakout imminent?)
-    0.7 - 1.3    = NORMAL
-    ratio > 1.3  = EXPANDING   (becoming unstable)
-
-    Compressing near resistance = breakout coil (watch for upside)
-    Compressing near support    = breakdown coil (watch for downside)
-    Expanding anywhere          = unstable for range trading
-```
-
-### Earnings Risk
-
-Uses yfinance to check next earnings date. Binary events destroy range structure.
-
-```
-    <=7 days   = HIGH RISK   (entry quality capped at 30)
-    8-14 days  = MODERATE    (caution flag)
-    >14 days   = LOW         (safe for range trading)
-
-    Example reason: "earnings in 3d (HIGH RISK)"
-```
-
-### False-Break Detection
-
-Counts "fakeouts" — price breaks a level then snaps back inside, validating the zone.
-
-```
-    EXAMPLE (bull trap at resistance):
-      Resistance = $110.
-      Day X: high reaches $112 (broke above!)
-      But close = $109 (came back inside).
-      → Bull trap. Resistance is confirmed strong.
-
-    EXAMPLE (bear trap at support):
-      Support = $100.
-      Day Y: low drops to $98 (broke below!)
-      But close = $101 (recovered).
-      → Bear trap. Support is confirmed strong.
-
-    More false breaks = more validated zones = higher confidence.
-    Reason: "6 false breaks (zones validated)"
-```
-
-### Volume Profile
-
-Approximates where most trading volume is concentrated within the range.
-
-```
-    Think of the range as a parking garage with 5 floors:
-
-    BALANCED         Volume spread evenly → healthy auction
-    HIGH_AT_SUPPORT  Most cars on floor 1 → strong buying at floor
-    HIGH_AT_RESISTANCE  Most cars on top floor → strong selling at ceiling
-    THIN_MIDDLE      Edges full, middle empty → could break through middle easily
+```bash
+python -m range_scanner --universe utilities --context --top 20
+python -m range_scanner --universe reits --charts --top 15
+python -m range_scanner --universe meme_speculative --context --top 10
 ```
 
 ---
 
-## Validation Tools
+## Setup Types
 
-### Human Labeling
+When `--context` is enabled, each ticker gets classified into an actionable setup:
 
-After visual review, label tickers in `validation/labels.csv`:
+| Setup | Meaning | When it triggers |
+|-------|---------|------------------|
+| `MEAN_REVERSION_LONG` | Potential buy near support | Near support + good RS + favorable market |
+| `MEAN_REVERSION_SHORT` | Potential short near resistance | Near resistance + calm market + low breakout risk |
+| `BREAKOUT_WATCH_UPSIDE` | Watch for upside breakout | Near resistance + risk-on + sector trending |
+| `BREAKDOWN_WATCH_DOWNSIDE` | Watch for downside break | Near support + high volume + price falling |
+| `RANGE_MONITOR_ONLY` | Watchlist, wait for edge | Valid range but price is mid-range |
+| `AVOID_CONTEXT_CONFLICT` | Edge exists but context fights it | Near support but badly underperforming |
+| `NOT_RANGE_TRADE` | Don't apply range logic | Broken, trending, or invalid |
 
+---
+
+## Validation
+
+### Visual Review
 ```bash
-python validation/validate.py results/nasdaq100.csv
+# Export charts for top candidates
+python -m range_scanner --universe nasdaq100 --charts --top 10
+# Charts saved to charts/ directory
 ```
 
-Labels to use: `CLEAN_RANGE`, `CORRECT_REJECT`, `FALSE_POSITIVE`, `FALSE_NEGATIVE`, `BREAKOUT_CANDIDATE`, `VALID_BUT_WIDE`, `MESSY_BUT_TRADEABLE`
-
 ### Structure Backtest
-
-Tests whether detected ranges actually held over the next N trading days:
-
 ```bash
+# Test: did "excellent" ranges actually hold for 10 days?
 python validation/backtest.py results/nasdaq100.csv --days 10
 ```
 
-Not a trading backtest — a structure-persistence test. Reports what % of "excellent range" picks stayed inside their bands.
+### Human Labeling
+```bash
+# After reviewing charts, label in validation/labels.csv
+# Then check agreement rate:
+python validation/validate.py results/nasdaq100.csv
+```
 
 ---
 
-## Dashboard (Streamlit UI)
-
-A full web interface that replaces the CLI for everyday use.
+## CLI Reference
 
 ```bash
-streamlit run src/range_scanner/dashboard/app.py
+python -m range_scanner [OPTIONS]
 ```
 
-### Pages
-
-```
-    ┌─────────────────────────────────────────────────────────────────┐
-    │                                                                 │
-    │  SCANNER                                                        │
-    │  Pick a universe, set filters, click scan.                      │
-    │  Interactive sortable table with all metrics.                   │
-    │  Paste custom tickers or use built-in universes.                │
-    │                                                                 │
-    │  TICKER DETAIL                                                  │
-    │  Deep dive on any single ticker.                                │
-    │  All scores, metrics, chart, score breakdown table.             │
-    │                                                                 │
-    │  CHARTS                                                         │
-    │  Gallery view of exported PNG charts.                           │
-    │                                                                 │
-    │  BACKTEST                                                       │
-    │  Run structure persistence tests from the UI.                   │
-    │  See what % of "excellent" picks actually held.                 │
-    │                                                                 │
-    │  SETTINGS                                                       │
-    │  Configure API keys and scanner thresholds.                     │
-    │                                                                 │
-    └─────────────────────────────────────────────────────────────────┘
-```
-
-Japandi-styled: warm linen background, clean typography, minimal borders.
-
----
-
-## Chart Export (CLI)
-
-Charts use a Japandi-inspired palette — warm linen backgrounds, sage green up-candles, terracotta down-candles.
-
-Each chart includes:
-- Candlestick price action
-- Support zone (green dashed + shaded band)
-- Resistance zone (terracotta dashed + shaded band)
-- Midpoint reference line
-- Title: ticker, verdict, score
-- Metadata: range, width, rotations, sub-scores
-- Reason string at bottom
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--tickers` | `tickers.txt` | Path to ticker file |
+| `--universe` | — | Built-in universe name |
+| `--lookback` | `120` | Trading days of history |
+| `--output` | `results.csv` | CSV output path |
+| `--min-volume` | `1000000` | Min daily share volume |
+| `--min-dollar-volume` | `20000000` | Min daily dollar volume |
+| `--top` | `20` | Results to display |
+| `--charts` | off | Export PNG charts |
+| `--charts-dir` | `charts/` | Chart output directory |
+| `--context` | off | Add market/sector context |
 
 ---
 
@@ -458,40 +301,32 @@ Each chart includes:
 
 ```
 range-scanner/
-  CLAUDE.md                   Project spec
-  README.md                   This file
-  pyproject.toml              Dependencies and build config
-  .env                        API keys (git-ignored)
-  tickers.txt                 Default ticker list
-
-  universes/
-    personal.txt              Personal watchlist
-    nasdaq100.txt             Nasdaq-100 components
-    etfs.txt                  ETF universe
+  CLAUDE.md                       Project spec
+  README.md                       This file
+  DESIGN_RULES.md                 50-rule UI design system
+  pyproject.toml                  Dependencies
+  .env                            API keys (git-ignored)
 
   src/range_scanner/
-    __init__.py
-    __main__.py               Entry point
-    cli.py                    Typer CLI with scan command
-    config.py                 All thresholds in one config object
-    data.py                   Alpaca API client (paginated, retry)
-    indicators.py             ATR, ADX, EMA calculations
-    structure.py              Pivot detection, zones, rotations, tightness
-    scoring.py                Weighted scoring + verdict classification
-    state.py                  Edge position, entry quality, breakout risk
-    context.py                Market regime, sector, relative strength
-    setup.py                  Setup type classification
-    output.py                 CSV writer + rich console table
-    charts.py                 Japandi-styled PNG chart export
-    models.py                 Pydantic models for all data structures
+    cli.py                        Typer CLI entry point
+    config.py                     All thresholds in one place
+    data.py                       Alpaca API (concurrent, cached)
+    indicators.py                 ATR, ADX, EMA, gaps, compression
+    structure.py                  Pivots, zones, rotations, false breaks, volume profile
+    scoring.py                    Weighted scoring + verdicts
+    state.py                      Edge position, entry quality, breakout risk
+    context.py                    Market regime, sector, RS, earnings, short interest
+    setup.py                      Setup type classification
+    reasoning.py                  AI-style narrative generation
+    output.py                     CSV + rich console table
+    charts.py                     Japandi candlestick PNGs
+    models.py                     Pydantic models
+    dashboard/                    Streamlit web UI (5 pages)
 
-  tests/
-    test_indicators.py        ATR, ADX, EMA tests
-    test_structure.py         Pivot, clustering, rotation, tightness tests
-    test_scoring.py           Scoring functions + verdict + sub-scores
-
-  results/                    Scan outputs by universe
-  charts/                     Exported chart PNGs
+  universes/                      22 pre-built ticker lists
+  validation/                     Labeling tool + backtest
+  tests/                          74 unit tests
+  docs/images/                    Screenshots and charts
 ```
 
 ---
@@ -502,32 +337,23 @@ range-scanner/
 pytest tests/ -v
 ```
 
-69 unit tests covering indicators, structure detection, scoring, verdicts, and sub-scores.
-
----
-
-## Limitations
-
-- Support/resistance detection is approximate (pivot clustering, not volume profile)
-- A high score does not mean a good trade
-- A clean range can break immediately after detection
-- Earnings dates not yet integrated (placeholder for Sprint 7)
-- Context layer requires extra API calls (~3-5 additional tickers)
-- The system answers "what kind of setup is this?" not "should I trade this?"
+74 tests covering indicators, structure detection, scoring, verdicts, and sub-scores.
 
 ---
 
 ## Philosophy
 
 ```
-    ┌─────────────────────────────────────────────────────────────┐
-    │                                                             │
-    │   The scanner does NOT predict price.                       │
-    │                                                             │
-    │   It classifies structure, assesses context,                │
-    │   and tells you what kind of situation you're looking at.   │
-    │                                                             │
-    │   The human decides whether to act.                         │
-    │                                                             │
-    └─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                                                               │
+│   The scanner classifies structure, assesses context,         │
+│   and tells you what kind of situation you're looking at.     │
+│                                                               │
+│   It does NOT predict price.                                  │
+│   It does NOT recommend trades.                               │
+│   It does NOT manage risk.                                    │
+│                                                               │
+│   The human decides whether to act.                           │
+│                                                               │
+└───────────────────────────────────────────────────────────────┘
 ```
