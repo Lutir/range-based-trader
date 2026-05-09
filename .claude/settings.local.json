@@ -8,7 +8,8 @@
       "Bash(python *)",
       "WebFetch(domain:docs.alpaca.markets)",
       "Bash(python3 *)",
-      "Bash(awk -F, '$3 ~ /INSUFFICIENT|ILLIQUID|ERROR/ {print $1, $3, $NF}')"
+      "Bash(awk -F, '$3 ~ /INSUFFICIENT|ILLIQUID|ERROR/ {print $1, $3, $NF}')",
+      "Bash(pip install *)"
     ]
   }
 }

@@ -32,19 +32,37 @@ def _compute_risk_note(close: pd.Series, support: float, resistance: float) -> s
     return ""
 
 
+def _check_recent_validity(close: pd.Series, support: float, resistance: float) -> tuple[str, float]:
+    """Check if range is still valid based on last 20 candles.
+    Returns (status, recent_containment_ratio)."""
+    latest = close.iloc[-1]
+    if latest > resistance * 1.01:
+        return "BROKEN_UP", 0.0
+    if latest < support * 0.99:
+        return "BROKEN_DOWN", 0.0
+
+    recent = close.iloc[-20:]
+    inside = ((recent >= support) & (recent <= resistance)).sum()
+    recent_containment = inside / len(recent)
+    if recent_containment < 0.60:
+        return "STALE_RANGE", recent_containment
+    return "ACTIVE", recent_containment
+
+
 def _extract_dates(df: pd.DataFrame) -> tuple[str, str]:
     start = str(df["timestamp"].iloc[0])[:10]
     end = str(df["timestamp"].iloc[-1])[:10]
     return start, end
 
 
-def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
+def _scan_ticker(ticker: str, config: ScannerConfig) -> tuple[TickerScanResult, pd.DataFrame | None]:
+    """Returns (result, dataframe) — dataframe kept for chart export."""
     df = fetch_bars(ticker, config.lookback)
     if df is None or len(df) < config.min_candles:
         return TickerScanResult(
             ticker=ticker, verdict=Verdict.INSUFFICIENT_DATA,
             skip_reason=f"Insufficient data ({len(df) if df is not None else 0} candles)",
-        )
+        ), None
 
     data_start, data_end = _extract_dates(df)
 
@@ -54,7 +72,7 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
             ticker=ticker, verdict=Verdict.ERROR,
             skip_reason="Invalid latest close price",
             data_start=data_start, data_end=data_end,
-        )
+        ), None
 
     avg_volume = df["volume"].iloc[-config.volume_avg_window:].mean()
     avg_dollar_volume = (df["close"].iloc[-config.volume_avg_window:] * df["volume"].iloc[-config.volume_avg_window:]).mean()
@@ -67,7 +85,7 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
             avg_volume_20=round(avg_volume, 0),
             avg_dollar_volume_20=round(avg_dollar_volume, 0),
             data_start=data_start, data_end=data_end,
-        )
+        ), None
 
     adx_series = compute_adx(df["high"], df["low"], df["close"], config.adx_period)
     adx_val = adx_series.iloc[-1]
@@ -79,7 +97,7 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
         return TickerScanResult(
             ticker=ticker, verdict=Verdict.ERROR,
             skip_reason="Cannot compute ATR",
-        )
+        ), None
 
     ema_slope = compute_ema_slope_pct(df["close"], config.ema_period, config.ema_slope_window)
     if ema_slope is None:
@@ -94,20 +112,43 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
             avg_volume_20=round(avg_volume, 0), avg_dollar_volume_20=round(avg_dollar_volume, 0),
             data_start=data_start, data_end=data_end,
             skip_reason="No clear range structure detected",
-        )
+        ), df
+
+    # Recent validity check
+    validity_status, recent_containment = _check_recent_validity(
+        df["close"], structure.support, structure.resistance
+    )
 
     breakdown = compute_score(structure, adx_val, atr_pct, ema_slope, avg_dollar_volume, config)
+
+    # Downgrade score if range is no longer active
+    score = breakdown.total
+    if validity_status == "BROKEN_UP" or validity_status == "BROKEN_DOWN":
+        score = min(score, 40.0)
+    elif validity_status == "STALE_RANGE":
+        score = min(score, 55.0)
+
     verdict = classify_verdict(
-        breakdown.total, adx_val, ema_slope,
+        score, adx_val, ema_slope,
         structure.trend_leakage, structure.range_width_pct, structure.rotation_count,
     )
     risk_note = _compute_risk_note(df["close"], structure.support, structure.resistance)
     structure_score, regime_score, liquidity_sc = compute_sub_scores(breakdown)
     reason = generate_reason(structure, adx_val, ema_slope, verdict)
 
+    # Append validity status to reason if range is degraded
+    if validity_status == "BROKEN_UP":
+        reason += "; BROKEN above resistance"
+        risk_note = "BROKEN_UP"
+    elif validity_status == "BROKEN_DOWN":
+        reason += "; BROKEN below support"
+        risk_note = "BROKEN_DOWN"
+    elif validity_status == "STALE_RANGE":
+        reason += f"; stale (recent containment {recent_containment:.0%})"
+
     return TickerScanResult(
         ticker=ticker,
-        score=breakdown.total,
+        score=round(score, 2),
         verdict=verdict,
         support=structure.support,
         resistance=structure.resistance,
@@ -131,7 +172,7 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
         data_end=data_end,
         risk_note=risk_note,
         reason=reason,
-    )
+    ), df
 
 
 @app.command()
@@ -142,6 +183,8 @@ def scan(
     min_volume: Annotated[int, typer.Option(help="Minimum average daily volume")] = 1_000_000,
     min_dollar_volume: Annotated[int, typer.Option(help="Minimum average dollar volume")] = 20_000_000,
     top: Annotated[int, typer.Option(help="Top results to display")] = 20,
+    charts: Annotated[bool, typer.Option(help="Export PNG charts for top candidates")] = False,
+    charts_dir: Annotated[Path, typer.Option(help="Directory for chart PNGs")] = Path("charts"),
 ) -> None:
     """Scan tickers for range-bound structure."""
     config = ScannerConfig(
@@ -158,17 +201,37 @@ def scan(
 
     console.print(f"[bold]Scanning {len(ticker_list)} tickers...[/bold]")
     results: list[TickerScanResult] = []
+    dataframes: dict[str, pd.DataFrame] = {}
 
     for ticker in ticker_list:
         try:
-            result = _scan_ticker(ticker, config)
+            result, df = _scan_ticker(ticker, config)
         except Exception as e:
             result = TickerScanResult(
                 ticker=ticker, verdict=Verdict.ERROR,
                 skip_reason=f"Exception: {e}",
             )
+            df = None
         results.append(result)
+        if df is not None:
+            dataframes[ticker] = df
 
     write_csv(results, output)
     print_summary(results, top, len(ticker_list))
     console.print(f"\n[green]Results written to {output}[/green]")
+
+    if charts:
+        from range_scanner.charts import export_chart
+
+        passed = [r for r in results if r.skip_reason == "" and r.ticker in dataframes]
+        ranked = sorted(passed, key=lambda r: r.score, reverse=True)[:top]
+
+        if not ranked:
+            console.print("[yellow]No charts to export.[/yellow]")
+            return
+
+        console.print(f"\n[bold]Exporting {len(ranked)} charts to {charts_dir}/[/bold]")
+        for i, r in enumerate(ranked, 1):
+            filepath = export_chart(dataframes[r.ticker], r, i, charts_dir)
+            console.print(f"  {filepath.name}")
+        console.print(f"[green]Charts exported to {charts_dir}/[/green]")
