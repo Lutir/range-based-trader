@@ -57,6 +57,8 @@ class RangeStructure(BaseModel):
     resistance_reaction_strength: float = 0.0
     tightness: float = 0.0
     trend_leakage: float = 0.0
+    resistance_false_breaks: int = 0
+    support_false_breaks: int = 0
 
 
 class ScoreBreakdown(BaseModel):

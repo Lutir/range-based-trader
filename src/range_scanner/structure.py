@@ -174,6 +174,50 @@ def detect_higher_highs_lows(pivot_highs: list[tuple[int, float]], pivot_lows: l
     return max(up_leakage, down_leakage)
 
 
+def detect_false_breaks(df: pd.DataFrame, support: float, resistance: float, tolerance_pct: float) -> tuple[int, int]:
+    """Count false breakouts — price breaks a level then closes back inside.
+
+    A FALSE BREAK (also called a "fakeout" or "trap") happens when:
+    - Price pokes ABOVE resistance (wick goes higher) but CLOSES back below it
+    - Price pokes BELOW support (wick goes lower) but CLOSES back above it
+
+    WHY THIS MATTERS:
+    False breaks actually VALIDATE the range. If price tried to break out
+    and failed, it means there's real selling at resistance or buying at support.
+
+    EXAMPLE (bull trap at resistance):
+      Resistance = $110. One day the high reaches $112 (broke above!)
+      But by the close, price settles at $109 (closed back inside).
+      This is a "bull trap" — longs who bought the breakout got trapped.
+      It confirms $110 resistance is strong.
+
+    EXAMPLE (bear trap at support):
+      Support = $100. One day the low drops to $98 (broke below!)
+      But by the close, price recovers to $101 (closed back inside).
+      This is a "bear trap" — shorts got trapped.
+      It confirms $100 support is strong.
+
+    Returns (resistance_false_breaks, support_false_breaks).
+    Higher counts = stronger zone validation.
+    """
+    res_tolerance = resistance * (1 + tolerance_pct / 100)
+    sup_tolerance = support * (1 - tolerance_pct / 100)
+
+    resistance_traps = 0
+    support_traps = 0
+
+    for i in range(1, len(df)):
+        row = df.iloc[i]
+        # Bull trap: high broke above resistance but close came back inside
+        if row["high"] > resistance and row["close"] <= resistance:
+            resistance_traps += 1
+        # Bear trap: low broke below support but close came back inside
+        if row["low"] < support and row["close"] >= support:
+            support_traps += 1
+
+    return resistance_traps, support_traps
+
+
 def detect_range_structure(df: pd.DataFrame, config: ScannerConfig) -> RangeStructure | None:
     high = df["high"]
     low = df["low"]
@@ -218,6 +262,7 @@ def detect_range_structure(df: pd.DataFrame, config: ScannerConfig) -> RangeStru
     rotation_count = compute_rotation_count(close, support, resistance)
     tightness = compute_range_tightness(close, support, resistance)
     trend_leakage = detect_higher_highs_lows(pivot_highs, pivot_lows)
+    res_false_breaks, sup_false_breaks = detect_false_breaks(df, support, resistance, tolerance_pct)
 
     return RangeStructure(
         support=round(support, 2),
@@ -231,4 +276,6 @@ def detect_range_structure(df: pd.DataFrame, config: ScannerConfig) -> RangeStru
         resistance_reaction_strength=round(resistance_reaction, 4),
         tightness=round(tightness, 4),
         trend_leakage=round(trend_leakage, 4),
+        resistance_false_breaks=res_false_breaks,
+        support_false_breaks=sup_false_breaks,
     )

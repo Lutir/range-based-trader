@@ -290,6 +290,13 @@ def generate_reason(
     elif avg_reaction < 0.5:
         parts.append("weak reactions")
 
+    # False-break validation
+    total_traps = structure.resistance_false_breaks + structure.support_false_breaks
+    if total_traps >= 3:
+        parts.append(f"{total_traps} false breaks (zones validated)")
+    elif total_traps >= 1:
+        parts.append(f"{total_traps} false break(s)")
+
     # Edge position context
     if edge_position == EdgePosition.BROKEN_UP:
         parts.append("BROKEN above resistance")
