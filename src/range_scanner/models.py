@@ -49,5 +49,7 @@ class TickerScanResult(BaseModel):
     avg_volume_20: float | None = None
     avg_dollar_volume_20: float | None = None
     latest_close: float | None = None
+    data_start: str | None = None
+    data_end: str | None = None
     risk_note: str = ""
     skip_reason: str = ""

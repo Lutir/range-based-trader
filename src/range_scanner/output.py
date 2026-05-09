@@ -12,7 +12,7 @@ CSV_COLUMNS = [
     "ticker", "score", "verdict", "support", "resistance", "range_width_pct",
     "support_touches", "resistance_touches", "containment_ratio", "adx_14",
     "atr_pct", "ema20_slope_pct", "avg_volume_20", "avg_dollar_volume_20",
-    "latest_close", "risk_note", "skip_reason",
+    "latest_close", "data_start", "data_end", "risk_note", "skip_reason",
 ]
 
 
@@ -37,6 +37,8 @@ def write_csv(results: list[TickerScanResult], path: Path) -> None:
                 "avg_volume_20": r.avg_volume_20 if r.avg_volume_20 is not None else "",
                 "avg_dollar_volume_20": r.avg_dollar_volume_20 if r.avg_dollar_volume_20 is not None else "",
                 "latest_close": r.latest_close if r.latest_close is not None else "",
+                "data_start": r.data_start or "",
+                "data_end": r.data_end or "",
                 "risk_note": r.risk_note,
                 "skip_reason": r.skip_reason,
             }
@@ -63,9 +65,11 @@ def print_summary(results: list[TickerScanResult], top: int, total_scanned: int)
     table.add_column("Score")
     table.add_column("Verdict")
     table.add_column("Range")
+    table.add_column("Based On")
 
     for i, r in enumerate(ranked, 1):
         range_str = f"{r.support:.2f}–{r.resistance:.2f}" if r.support and r.resistance else "N/A"
-        table.add_row(str(i), r.ticker, f"{r.score:.1f}", r.verdict.value, range_str)
+        date_str = f"{r.data_start} to {r.data_end}" if r.data_start and r.data_end else "N/A"
+        table.add_row(str(i), r.ticker, f"{r.score:.1f}", r.verdict.value, range_str, date_str)
 
     console.print(table)

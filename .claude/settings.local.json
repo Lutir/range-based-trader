@@ -5,7 +5,9 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(python3 -m pip install -e \".[dev]\")",
-      "Bash(python *)"
+      "Bash(python *)",
+      "WebFetch(domain:docs.alpaca.markets)",
+      "Bash(python3 *)"
     ]
   }
 }

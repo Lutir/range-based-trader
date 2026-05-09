@@ -32,6 +32,12 @@ def _compute_risk_note(close: pd.Series, support: float, resistance: float) -> s
     return ""
 
 
+def _extract_dates(df: pd.DataFrame) -> tuple[str, str]:
+    start = str(df["timestamp"].iloc[0])[:10]
+    end = str(df["timestamp"].iloc[-1])[:10]
+    return start, end
+
+
 def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
     df = fetch_bars(ticker, config.lookback)
     if df is None or len(df) < config.min_candles:
@@ -40,11 +46,14 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
             skip_reason=f"Insufficient data ({len(df) if df is not None else 0} candles)",
         )
 
+    data_start, data_end = _extract_dates(df)
+
     latest_close = df["close"].iloc[-1]
     if pd.isna(latest_close) or latest_close <= 0:
         return TickerScanResult(
             ticker=ticker, verdict=Verdict.ERROR,
             skip_reason="Invalid latest close price",
+            data_start=data_start, data_end=data_end,
         )
 
     avg_volume = df["volume"].iloc[-config.volume_avg_window:].mean()
@@ -57,6 +66,7 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
             latest_close=latest_close,
             avg_volume_20=round(avg_volume, 0),
             avg_dollar_volume_20=round(avg_dollar_volume, 0),
+            data_start=data_start, data_end=data_end,
         )
 
     adx_series = compute_adx(df["high"], df["low"], df["close"], config.adx_period)
@@ -82,6 +92,7 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
             adx_14=round(adx_val, 2), atr_pct=round(atr_pct, 2),
             ema20_slope_pct=round(ema_slope, 2), latest_close=latest_close,
             avg_volume_20=round(avg_volume, 0), avg_dollar_volume_20=round(avg_dollar_volume, 0),
+            data_start=data_start, data_end=data_end,
             skip_reason="No clear range structure detected",
         )
 
@@ -105,6 +116,8 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
         avg_volume_20=round(avg_volume, 0),
         avg_dollar_volume_20=round(avg_dollar_volume, 0),
         latest_close=latest_close,
+        data_start=data_start,
+        data_end=data_end,
         risk_note=risk_note,
     )
 
