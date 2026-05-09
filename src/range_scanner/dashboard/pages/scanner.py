@@ -18,7 +18,7 @@ from range_scanner.state import assess_breakout_risk, classify_edge_position, co
 from range_scanner.structure import detect_range_structure
 
 
-_UNIVERSES_DIR = Path(__file__).parent.parent.parent.parent / "universes"
+_UNIVERSES_DIR = Path.cwd() / "universes"
 
 
 def _load_tickers(path: Path) -> list[str]:
