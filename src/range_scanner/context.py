@@ -168,16 +168,37 @@ def compute_relative_strength(stock_df: pd.DataFrame, benchmark_df: pd.DataFrame
 
 
 def fetch_days_to_earnings(ticker: str) -> int | None:
-    """Fetch days until next earnings from Alpaca calendar endpoint.
-    Returns None if unavailable."""
+    """Fetch days until next earnings using yfinance. Returns None if unavailable."""
     try:
-        from datetime import datetime, timedelta
-        base_url = _get_base_url().replace("data.", "paper-api.")
-        # Alpaca doesn't have a free earnings endpoint in market data API
-        # For MVP, return None and note this needs an external source
-        return None
+        from datetime import date
+        import yfinance as yf
+
+        t = yf.Ticker(ticker)
+        cal = t.calendar
+        if not cal or "Earnings Date" not in cal:
+            return None
+
+        earnings_dates = cal["Earnings Date"]
+        if not earnings_dates:
+            return None
+
+        today = date.today()
+        next_earnings = earnings_dates[0]
+        if hasattr(next_earnings, "date"):
+            next_earnings = next_earnings.date()
+
+        days = (next_earnings - today).days
+        return days if days >= 0 else None
     except Exception:
         return None
+
+
+def fetch_earnings_batch(tickers: list[str]) -> dict[str, int | None]:
+    """Fetch earnings dates for multiple tickers. Returns {ticker: days_to_earnings}."""
+    results = {}
+    for ticker in tickers:
+        results[ticker] = fetch_days_to_earnings(ticker)
+    return results
 
 
 def get_sector_etf(ticker: str) -> str:

@@ -16,6 +16,7 @@ CSV_COLUMNS = [
     "support_touches", "resistance_touches", "containment_ratio",
     "rotation_count", "tightness", "trend_leakage",
     "gap_frequency", "avg_gap_pct", "compression_ratio", "compression_label",
+    "days_to_earnings", "earnings_risk",
     "adx_14", "atr_pct", "ema20_slope_pct", "avg_volume_20", "avg_dollar_volume_20",
     "latest_close", "data_start", "data_end", "risk_note", "reason", "skip_reason",
 ]
@@ -52,6 +53,8 @@ def write_csv(results: list[TickerScanResult], path: Path) -> None:
                 "avg_gap_pct": r.avg_gap_pct if r.avg_gap_pct is not None else "",
                 "compression_ratio": r.compression_ratio if r.compression_ratio is not None else "",
                 "compression_label": r.compression_label or "",
+                "days_to_earnings": r.days_to_earnings if r.days_to_earnings is not None else "",
+                "earnings_risk": r.earnings_risk or "",
                 "adx_14": r.adx_14 if r.adx_14 is not None else "",
                 "atr_pct": r.atr_pct if r.atr_pct is not None else "",
                 "ema20_slope_pct": r.ema20_slope_pct if r.ema20_slope_pct is not None else "",

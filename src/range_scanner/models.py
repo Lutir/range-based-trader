@@ -107,6 +107,8 @@ class TickerScanResult(BaseModel):
     avg_gap_pct: float | None = None
     compression_ratio: float | None = None
     compression_label: str | None = None
+    days_to_earnings: int | None = None
+    earnings_risk: str | None = None
     # Sub-scores for explainability
     structure_score: float | None = None
     regime_score: float | None = None

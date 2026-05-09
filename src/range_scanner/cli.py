@@ -261,11 +261,13 @@ def scan(
     market_details: dict = {}
     sector_cache: dict[str, tuple] = {}
     spy_df: pd.DataFrame | None = None
+    earnings_cache: dict[str, int | None] = {}
 
     if context:
         from range_scanner.context import (
             MarketRegime, fetch_market_regime, fetch_sector_regime,
             get_sector_etf, compute_relative_strength, fetch_bars,
+            fetch_days_to_earnings,
         )
         console.print("[dim]Fetching market context...[/dim]")
         market_regime, market_details = fetch_market_regime(lookback)
@@ -317,6 +319,21 @@ def scan(
                 result.setup_type = setup
                 result.context_score = ctx_score
 
+                # Earnings risk
+                from range_scanner.context import fetch_days_to_earnings
+                if ticker not in earnings_cache:
+                    earnings_cache[ticker] = fetch_days_to_earnings(ticker)
+                dte = earnings_cache[ticker]
+                if dte is not None:
+                    result.days_to_earnings = dte
+                    if dte <= 7:
+                        result.earnings_risk = "HIGH"
+                        result.entry_quality = min(result.entry_quality or 0, 30.0)
+                    elif dte <= 14:
+                        result.earnings_risk = "MODERATE"
+                    else:
+                        result.earnings_risk = "LOW"
+
                 # Build context reason
                 ctx_parts = []
                 ctx_parts.append(f"setup: {setup.value.replace('_', ' ').lower()}")
@@ -326,6 +343,8 @@ def scan(
                     ctx_parts.append(f"RS +{rs_20:.1f}% (outperforming)")
                 elif rs_20 < -3:
                     ctx_parts.append(f"RS {rs_20:.1f}% (underperforming)")
+                if dte is not None and dte <= 14:
+                    ctx_parts.append(f"earnings in {dte}d ({'HIGH RISK' if dte <= 7 else 'caution'})")
 
                 result.reason += "; " + "; ".join(ctx_parts)
 
