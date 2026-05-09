@@ -112,6 +112,9 @@ class TickerScanResult(BaseModel):
     compression_label: str | None = None
     days_to_earnings: int | None = None
     earnings_risk: str | None = None
+    short_pct_float: float | None = None
+    days_to_cover: float | None = None
+    short_interest_risk: str | None = None
     # Sub-scores for explainability
     structure_score: float | None = None
     regime_score: float | None = None

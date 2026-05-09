@@ -334,6 +334,19 @@ def scan(
                     else:
                         result.earnings_risk = "LOW"
 
+                # Short interest (only for non-ETF, non-broken tickers worth checking)
+                from range_scanner.context import fetch_short_interest
+                si_pct, dtc = fetch_short_interest(ticker)
+                if si_pct is not None:
+                    result.short_pct_float = round(si_pct * 100, 1) if si_pct < 1 else round(si_pct, 1)
+                    result.days_to_cover = round(dtc, 1) if dtc else None
+                    if (si_pct > 0.15) or (dtc and dtc > 8):
+                        result.short_interest_risk = "HIGH"
+                    elif (si_pct > 0.08) or (dtc and dtc > 5):
+                        result.short_interest_risk = "MODERATE"
+                    else:
+                        result.short_interest_risk = "LOW"
+
                 # Build context reason
                 ctx_parts = []
                 ctx_parts.append(f"setup: {setup.value.replace('_', ' ').lower()}")
@@ -345,6 +358,9 @@ def scan(
                     ctx_parts.append(f"RS {rs_20:.1f}% (underperforming)")
                 if dte is not None and dte <= 14:
                     ctx_parts.append(f"earnings in {dte}d ({'HIGH RISK' if dte <= 7 else 'caution'})")
+                if result.short_interest_risk in ("HIGH", "MODERATE"):
+                    si_display = result.short_pct_float or 0
+                    ctx_parts.append(f"SI {si_display:.0f}% float ({result.short_interest_risk} crowding)")
 
                 result.reason += "; " + "; ".join(ctx_parts)
 

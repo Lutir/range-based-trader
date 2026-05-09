@@ -201,6 +201,42 @@ def fetch_earnings_batch(tickers: list[str]) -> dict[str, int | None]:
     return results
 
 
+def fetch_short_interest(ticker: str) -> tuple[float | None, float | None]:
+    """Fetch short interest data using yfinance.
+
+    Returns (short_pct_float, days_to_cover).
+
+    WHAT IS SHORT INTEREST?
+    When someone "shorts" a stock, they borrow shares and sell them,
+    betting the price will drop so they can buy back cheaper.
+
+    short_pct_float = what percentage of tradeable shares are currently shorted.
+    - 5% = normal
+    - 10-15% = elevated
+    - 20%+ = very crowded short (squeeze risk)
+
+    days_to_cover = how many days of normal volume it would take to buy back
+    all short positions. Higher = more crowded.
+    - 2-3 days = normal
+    - 5+ days = crowded
+    - 10+ days = extremely crowded (squeeze risk)
+
+    WHY THIS MATTERS FOR RANGE TRADING:
+    - High short interest near resistance = potential short squeeze (breakout risk)
+    - High short interest near support = shorts may cover, providing a floor
+    - Very high SI makes price action unpredictable (not ideal for range trading)
+    """
+    try:
+        import yfinance as yf
+        t = yf.Ticker(ticker)
+        info = t.info
+        short_pct = info.get("shortPercentOfFloat")
+        days_to_cover = info.get("shortRatio")
+        return short_pct, days_to_cover
+    except Exception:
+        return None, None
+
+
 def get_sector_etf(ticker: str) -> str:
     """Map ticker to sector ETF. Defaults to SPY if unknown."""
     return SECTOR_MAP.get(ticker, "SPY")
