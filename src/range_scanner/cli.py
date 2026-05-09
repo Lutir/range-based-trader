@@ -220,6 +220,7 @@ def scan(
     top: Annotated[int, typer.Option(help="Top results to display")] = 20,
     charts: Annotated[bool, typer.Option(help="Export PNG charts for top candidates")] = False,
     charts_dir: Annotated[Path, typer.Option(help="Directory for chart PNGs")] = Path("charts"),
+    context: Annotated[bool, typer.Option(help="Add market/sector context layer")] = False,
 ) -> None:
     """Scan tickers for range-bound structure."""
     tickers = _resolve_tickers(tickers, universe)
@@ -230,6 +231,25 @@ def scan(
         min_dollar_volume=min_dollar_volume,
         top=top,
     )
+
+    # Fetch market context if requested
+    market_regime = None
+    market_details: dict = {}
+    sector_cache: dict[str, tuple] = {}
+    spy_df: pd.DataFrame | None = None
+
+    if context:
+        from range_scanner.context import (
+            MarketRegime, fetch_market_regime, fetch_sector_regime,
+            get_sector_etf, compute_relative_strength, fetch_bars,
+        )
+        console.print("[dim]Fetching market context...[/dim]")
+        market_regime, market_details = fetch_market_regime(lookback)
+        regime_label = market_regime.value.replace("_", " ")
+        console.print(f"[bold]Market regime:[/bold] {regime_label}")
+        if market_details:
+            console.print(f"[dim]  SPY ADX={market_details.get('spy_adx')} slope={market_details.get('spy_slope')}% | QQQ ADX={market_details.get('qqq_adx')} slope={market_details.get('qqq_slope')}%[/dim]")
+        spy_df = fetch_bars("SPY", lookback)
 
     ticker_list = _load_tickers(tickers)
     if not ticker_list:
@@ -243,6 +263,36 @@ def scan(
     for ticker in ticker_list:
         try:
             result, df = _scan_ticker(ticker, config)
+
+            # Enrich with context if available
+            if context and df is not None and result.skip_reason == "":
+                from range_scanner.context import (
+                    get_sector_etf, fetch_sector_regime, compute_relative_strength,
+                    SectorRegime,
+                )
+                sector_etf = get_sector_etf(ticker)
+
+                # Cache sector lookups
+                if sector_etf not in sector_cache:
+                    sector_cache[sector_etf] = fetch_sector_regime(sector_etf, lookback)
+                sec_regime, sec_slope = sector_cache[sector_etf]
+
+                # Relative strength vs SPY
+                rs_20 = 0.0
+                if spy_df is not None:
+                    rs_20 = compute_relative_strength(df, spy_df, 20)
+
+                # Append context to reason
+                ctx_parts = []
+                ctx_parts.append(f"market {market_regime.value.replace('_', ' ').lower()}")
+                ctx_parts.append(f"sector ({sector_etf}) {sec_regime.value.replace('_', ' ').lower()}")
+                if rs_20 > 3:
+                    ctx_parts.append(f"RS +{rs_20:.1f}% (outperforming)")
+                elif rs_20 < -3:
+                    ctx_parts.append(f"RS {rs_20:.1f}% (underperforming)")
+
+                result.reason += "; " + "; ".join(ctx_parts)
+
         except Exception as e:
             result = TickerScanResult(
                 ticker=ticker, verdict=Verdict.ERROR,
