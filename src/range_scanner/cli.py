@@ -184,9 +184,35 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> tuple[TickerScanResult, 
     ), df
 
 
+_UNIVERSES_DIR = Path(__file__).parent.parent.parent / "universes"
+
+_UNIVERSE_MAP = {
+    "personal": "personal.txt",
+    "nasdaq100": "nasdaq100.txt",
+    "sp500": "sp500.txt",
+    "etfs": "etfs.txt",
+    "russell1000": "russell1000.txt",
+}
+
+
+def _resolve_tickers(tickers: Path, universe: str | None) -> Path:
+    if universe:
+        filename = _UNIVERSE_MAP.get(universe)
+        if not filename:
+            console.print(f"[red]Unknown universe: {universe}. Available: {', '.join(_UNIVERSE_MAP.keys())}[/red]")
+            raise typer.Exit(1)
+        path = _UNIVERSES_DIR / filename
+        if not path.exists():
+            console.print(f"[red]Universe file not found: {path}[/red]")
+            raise typer.Exit(1)
+        return path
+    return tickers
+
+
 @app.command()
 def scan(
     tickers: Annotated[Path, typer.Option(help="Path to ticker file")] = Path("tickers.txt"),
+    universe: Annotated[str | None, typer.Option(help="Built-in universe: personal, nasdaq100, sp500, etfs")] = None,
     lookback: Annotated[int, typer.Option(help="Number of daily candles")] = 120,
     output: Annotated[Path, typer.Option(help="CSV output path")] = Path("results.csv"),
     min_volume: Annotated[int, typer.Option(help="Minimum average daily volume")] = 1_000_000,
@@ -196,6 +222,8 @@ def scan(
     charts_dir: Annotated[Path, typer.Option(help="Directory for chart PNGs")] = Path("charts"),
 ) -> None:
     """Scan tickers for range-bound structure."""
+    tickers = _resolve_tickers(tickers, universe)
+
     config = ScannerConfig(
         lookback=lookback,
         min_volume=min_volume,
