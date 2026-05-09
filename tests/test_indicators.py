@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from range_scanner.indicators import compute_adx, compute_atr, compute_atr_pct, compute_ema, compute_ema_slope_pct
+from range_scanner.indicators import compute_adx, compute_atr, compute_atr_pct, compute_ema, compute_ema_slope_pct, compute_gap_stats
 
 
 def _make_flat_series(n: int = 100, base: float = 100.0, noise: float = 1.0) -> pd.DataFrame:
@@ -68,3 +68,30 @@ class TestEMA:
         slope = compute_ema_slope_pct(df["close"], period=20, slope_window=20)
         assert slope is not None
         assert slope > 5.0
+
+
+class TestGapStats:
+    def test_no_gaps(self):
+        close = pd.Series([100.0] * 50)
+        open_prices = pd.Series([100.0] * 50)
+        freq, avg, mx = compute_gap_stats(open_prices, close)
+        assert freq == 0.0
+        assert avg == 0.0
+
+    def test_all_large_gaps(self):
+        close = pd.Series([100.0] * 50)
+        open_prices = pd.Series([103.0] * 50)
+        freq, avg, mx = compute_gap_stats(open_prices, close)
+        assert freq > 0.9
+        assert avg > 2.5
+
+    def test_mixed_gaps(self):
+        np.random.seed(99)
+        close = pd.Series(np.full(100, 100.0))
+        opens = close.copy()
+        opens.iloc[10] = 103.0
+        opens.iloc[30] = 97.0
+        opens.iloc[50] = 104.0
+        freq, avg, mx = compute_gap_stats(opens, close, threshold_pct=2.0)
+        assert 0.01 < freq < 0.10
+        assert mx >= 3.0

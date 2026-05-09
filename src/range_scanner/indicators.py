@@ -50,3 +50,22 @@ def compute_atr_pct(high: pd.Series, low: pd.Series, close: pd.Series, period: i
     if pd.isna(latest_atr) or latest_close <= 0:
         return None
     return latest_atr / latest_close * 100
+
+
+def compute_gap_stats(open_prices: pd.Series, close: pd.Series, threshold_pct: float = 2.0) -> tuple[float, float, float]:
+    """Compute gap statistics from open vs prior close.
+    Returns (gap_frequency, avg_gap_pct, max_gap_pct).
+    gap_frequency = fraction of days with gaps > threshold."""
+    prev_close = close.shift(1)
+    gap_pct = ((open_prices - prev_close) / prev_close * 100).abs()
+    gap_pct = gap_pct.dropna()
+
+    if len(gap_pct) == 0:
+        return 0.0, 0.0, 0.0
+
+    large_gaps = (gap_pct > threshold_pct).sum()
+    frequency = large_gaps / len(gap_pct)
+    avg = float(gap_pct.mean())
+    max_gap = float(gap_pct.max())
+
+    return frequency, avg, max_gap

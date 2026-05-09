@@ -6,7 +6,7 @@ import typer
 
 from range_scanner.config import ScannerConfig
 from range_scanner.data import fetch_bars
-from range_scanner.indicators import compute_adx, compute_atr_pct, compute_ema_slope_pct
+from range_scanner.indicators import compute_adx, compute_atr_pct, compute_ema_slope_pct, compute_gap_stats
 from range_scanner.models import BreakoutRisk, EdgePosition, TickerScanResult, Verdict
 from range_scanner.output import console, print_summary, write_csv
 from range_scanner.scoring import classify_verdict, compute_score, compute_sub_scores, generate_reason
@@ -104,6 +104,8 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> tuple[TickerScanResult, 
     if ema_slope is None:
         ema_slope = 0.0
 
+    gap_freq, avg_gap, max_gap = compute_gap_stats(df["open"], df["close"])
+
     structure = detect_range_structure(df, config)
     if structure is None:
         return TickerScanResult(
@@ -151,6 +153,12 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> tuple[TickerScanResult, 
     if validity_status == "STALE_RANGE" and edge_pos not in (EdgePosition.BROKEN_UP, EdgePosition.BROKEN_DOWN):
         reason += f"; stale (recent containment {recent_containment:.0%})"
 
+    # Gap risk note
+    if gap_freq > 0.15:
+        reason += f"; frequent gaps ({gap_freq:.0%} of days >2%)"
+    elif gap_freq > 0.08:
+        reason += f"; moderate gap risk ({gap_freq:.0%})"
+
     return TickerScanResult(
         ticker=ticker,
         score=round(score, 2),
@@ -174,6 +182,8 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> tuple[TickerScanResult, 
         rotation_count=structure.rotation_count,
         tightness=structure.tightness,
         trend_leakage=structure.trend_leakage,
+        gap_frequency=round(gap_freq, 4),
+        avg_gap_pct=round(avg_gap, 2),
         structure_score=structure_score,
         regime_score=regime_score,
         liquidity_score=liquidity_sc,

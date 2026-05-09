@@ -103,6 +103,8 @@ class TickerScanResult(BaseModel):
     rotation_count: int | None = None
     tightness: float | None = None
     trend_leakage: float | None = None
+    gap_frequency: float | None = None
+    avg_gap_pct: float | None = None
     # Sub-scores for explainability
     structure_score: float | None = None
     regime_score: float | None = None
