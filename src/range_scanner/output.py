@@ -10,8 +10,9 @@ console = Console()
 
 CSV_COLUMNS = [
     "ticker", "score", "verdict", "support", "resistance", "range_width_pct",
-    "support_touches", "resistance_touches", "containment_ratio", "adx_14",
-    "atr_pct", "ema20_slope_pct", "avg_volume_20", "avg_dollar_volume_20",
+    "support_touches", "resistance_touches", "containment_ratio",
+    "rotation_count", "tightness", "trend_leakage",
+    "adx_14", "atr_pct", "ema20_slope_pct", "avg_volume_20", "avg_dollar_volume_20",
     "latest_close", "data_start", "data_end", "risk_note", "skip_reason",
 ]
 
@@ -31,6 +32,9 @@ def write_csv(results: list[TickerScanResult], path: Path) -> None:
                 "support_touches": r.support_touches if r.support_touches is not None else "",
                 "resistance_touches": r.resistance_touches if r.resistance_touches is not None else "",
                 "containment_ratio": r.containment_ratio if r.containment_ratio is not None else "",
+                "rotation_count": r.rotation_count if r.rotation_count is not None else "",
+                "tightness": r.tightness if r.tightness is not None else "",
+                "trend_leakage": r.trend_leakage if r.trend_leakage is not None else "",
                 "adx_14": r.adx_14 if r.adx_14 is not None else "",
                 "atr_pct": r.atr_pct if r.atr_pct is not None else "",
                 "ema20_slope_pct": r.ema20_slope_pct if r.ema20_slope_pct is not None else "",

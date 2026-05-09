@@ -97,7 +97,7 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
         )
 
     breakdown = compute_score(structure, adx_val, atr_pct, ema_slope, avg_dollar_volume, config)
-    verdict = classify_verdict(breakdown.total, adx_val, ema_slope)
+    verdict = classify_verdict(breakdown.total, adx_val, ema_slope, structure.trend_leakage)
     risk_note = _compute_risk_note(df["close"], structure.support, structure.resistance)
 
     return TickerScanResult(
@@ -116,6 +116,9 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
         avg_volume_20=round(avg_volume, 0),
         avg_dollar_volume_20=round(avg_dollar_volume, 0),
         latest_close=latest_close,
+        rotation_count=structure.rotation_count,
+        tightness=structure.tightness,
+        trend_leakage=structure.trend_leakage,
         data_start=data_start,
         data_end=data_end,
         risk_note=risk_note,

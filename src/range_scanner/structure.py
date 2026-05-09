@@ -22,43 +22,73 @@ def find_pivot_lows(low: pd.Series, window: int = 3) -> list[tuple[int, float]]:
     return pivots
 
 
-def cluster_prices(prices: list[float], tolerance_pct: float) -> list[list[float]]:
-    if not prices:
+def cluster_prices_weighted(
+    pivots: list[tuple[int, float]], tolerance_pct: float, total_bars: int
+) -> list[list[tuple[int, float]]]:
+    """Cluster pivot prices, preserving index for recency weighting."""
+    if not pivots:
         return []
-    sorted_prices = sorted(prices)
-    clusters: list[list[float]] = [[sorted_prices[0]]]
-    for price in sorted_prices[1:]:
-        cluster_mid = np.mean(clusters[-1])
-        if abs(price - cluster_mid) / cluster_mid * 100 <= tolerance_pct:
-            clusters[-1].append(price)
+    sorted_pivots = sorted(pivots, key=lambda x: x[1])
+    clusters: list[list[tuple[int, float]]] = [[sorted_pivots[0]]]
+    for pivot in sorted_pivots[1:]:
+        cluster_prices = [p[1] for p in clusters[-1]]
+        cluster_mid = np.mean(cluster_prices)
+        if abs(pivot[1] - cluster_mid) / cluster_mid * 100 <= tolerance_pct:
+            clusters[-1].append(pivot)
         else:
-            clusters.append([price])
+            clusters.append([pivot])
     return clusters
 
 
-def select_zone(clusters: list[list[float]], mode: str) -> float | None:
+def select_zone_weighted(
+    clusters: list[list[tuple[int, float]]], total_bars: int
+) -> tuple[float, float] | None:
+    """Select best zone using recency-weighted scoring. Returns (zone_price, zone_score)."""
     if not clusters:
         return None
-    best = max(clusters, key=len)
-    return float(np.mean(best))
+    best_score = -1.0
+    best_price = 0.0
+    for cluster in clusters:
+        recency_weights = [0.5 + 0.5 * (idx / total_bars) for idx, _ in cluster]
+        score = sum(recency_weights)
+        if score > best_score:
+            best_score = score
+            prices = [p for _, p in cluster]
+            best_price = float(np.mean(prices))
+    return best_price, best_score
 
 
-def count_touches(
+def count_touches_with_strength(
     df: pd.DataFrame, zone: float, tolerance_pct: float, side: str
-) -> int:
+) -> tuple[int, float]:
+    """Count touches and measure average reaction strength (% move away from zone)."""
     zone_low = zone * (1 - tolerance_pct / 100)
     zone_high = zone * (1 + tolerance_pct / 100)
     touches = 0
+    reaction_magnitudes: list[float] = []
 
-    if side == "support":
-        for _, row in df.iterrows():
+    for i in range(len(df)):
+        row = df.iloc[i]
+        is_touch = False
+
+        if side == "support":
             if zone_low <= row["low"] <= zone_high and row["close"] > zone:
-                touches += 1
-    else:
-        for _, row in df.iterrows():
+                is_touch = True
+        else:
             if zone_low <= row["high"] <= zone_high and row["close"] < zone:
-                touches += 1
-    return touches
+                is_touch = True
+
+        if is_touch:
+            touches += 1
+            # Measure reaction: how far did close move from zone?
+            if side == "support":
+                reaction = (row["close"] - zone) / zone * 100
+            else:
+                reaction = (zone - row["close"]) / zone * 100
+            reaction_magnitudes.append(reaction)
+
+    avg_reaction = float(np.mean(reaction_magnitudes)) if reaction_magnitudes else 0.0
+    return touches, avg_reaction
 
 
 def compute_containment_ratio(close: pd.Series, support: float, resistance: float) -> float:
@@ -66,10 +96,89 @@ def compute_containment_ratio(close: pd.Series, support: float, resistance: floa
     return inside / len(close)
 
 
+def compute_rotation_count(close: pd.Series, support: float, resistance: float) -> int:
+    """Count full rotations: price crossing from one zone toward the other.
+    A rotation = close moves from lower third to upper third or vice versa."""
+    range_size = resistance - support
+    lower_third = support + range_size * 0.33
+    upper_third = resistance - range_size * 0.33
+
+    rotations = 0
+    last_zone = None
+
+    for c in close:
+        if c <= lower_third:
+            current_zone = "low"
+        elif c >= upper_third:
+            current_zone = "high"
+        else:
+            continue
+
+        if last_zone is not None and current_zone != last_zone:
+            rotations += 1
+        last_zone = current_zone
+
+    return rotations
+
+
+def compute_range_tightness(close: pd.Series, support: float, resistance: float) -> float:
+    """Measure how tightly closes cluster around midpoint relative to range width.
+    Returns 0-1 where 1 = very tight oscillation, 0 = spread across full range."""
+    midpoint = (support + resistance) / 2
+    range_width = resistance - support
+    if range_width <= 0:
+        return 0.0
+    inside_closes = close[(close >= support) & (close <= resistance)]
+    if len(inside_closes) < 5:
+        return 0.0
+    stddev = inside_closes.std()
+    # Normalize: stddev relative to half the range width
+    # Perfect oscillation edge-to-edge has stddev ~ 0.29 * range (uniform)
+    # Tight clustering around midpoint has low stddev
+    # We want high stddev (using full range) = good rotational behavior
+    normalized = stddev / (range_width * 0.5)
+    return min(normalized, 1.0)
+
+
+def detect_higher_highs_lows(pivot_highs: list[tuple[int, float]], pivot_lows: list[tuple[int, float]]) -> float:
+    """Detect trending structure via consecutive higher-highs/higher-lows or lower pattern.
+    Returns a leakage score 0-1 where 1 = strong sequential trend."""
+    hh_count = 0
+    hl_count = 0
+    lh_count = 0
+    ll_count = 0
+
+    highs = [p for _, p in pivot_highs]
+    lows = [p for _, p in pivot_lows]
+
+    for i in range(1, len(highs)):
+        if highs[i] > highs[i - 1]:
+            hh_count += 1
+        elif highs[i] < highs[i - 1]:
+            lh_count += 1
+
+    for i in range(1, len(lows)):
+        if lows[i] > lows[i - 1]:
+            hl_count += 1
+        elif lows[i] < lows[i - 1]:
+            ll_count += 1
+
+    total_h = max(len(highs) - 1, 1)
+    total_l = max(len(lows) - 1, 1)
+
+    # Uptrend: higher-highs AND higher-lows
+    up_leakage = (hh_count / total_h) * (hl_count / total_l)
+    # Downtrend: lower-highs AND lower-lows
+    down_leakage = (lh_count / total_h) * (ll_count / total_l)
+
+    return max(up_leakage, down_leakage)
+
+
 def detect_range_structure(df: pd.DataFrame, config: ScannerConfig) -> RangeStructure | None:
     high = df["high"]
     low = df["low"]
     close = df["close"]
+    total_bars = len(df)
 
     atr = compute_atr(high, low, close, config.atr_period)
     latest_atr = atr.iloc[-1]
@@ -86,23 +195,29 @@ def detect_range_structure(df: pd.DataFrame, config: ScannerConfig) -> RangeStru
     if len(pivot_highs) < 2 or len(pivot_lows) < 2:
         return None
 
-    high_prices = [p for _, p in pivot_highs]
-    low_prices = [p for _, p in pivot_lows]
+    high_clusters = cluster_prices_weighted(pivot_highs, tolerance_pct, total_bars)
+    low_clusters = cluster_prices_weighted(pivot_lows, tolerance_pct, total_bars)
 
-    high_clusters = cluster_prices(high_prices, tolerance_pct)
-    low_clusters = cluster_prices(low_prices, tolerance_pct)
+    resistance_result = select_zone_weighted(high_clusters, total_bars)
+    support_result = select_zone_weighted(low_clusters, total_bars)
 
-    resistance = select_zone(high_clusters, "resistance")
-    support = select_zone(low_clusters, "support")
+    if resistance_result is None or support_result is None:
+        return None
 
-    if support is None or resistance is None or resistance <= support:
+    resistance = resistance_result[0]
+    support = support_result[0]
+
+    if resistance <= support:
         return None
 
     range_width_pct = (resistance - support) / support * 100
 
-    support_touches = count_touches(df, support, tolerance_pct, "support")
-    resistance_touches = count_touches(df, resistance, tolerance_pct, "resistance")
+    support_touches, support_reaction = count_touches_with_strength(df, support, tolerance_pct, "support")
+    resistance_touches, resistance_reaction = count_touches_with_strength(df, resistance, tolerance_pct, "resistance")
     containment_ratio = compute_containment_ratio(close, support, resistance)
+    rotation_count = compute_rotation_count(close, support, resistance)
+    tightness = compute_range_tightness(close, support, resistance)
+    trend_leakage = detect_higher_highs_lows(pivot_highs, pivot_lows)
 
     return RangeStructure(
         support=round(support, 2),
@@ -111,4 +226,9 @@ def detect_range_structure(df: pd.DataFrame, config: ScannerConfig) -> RangeStru
         support_touches=support_touches,
         resistance_touches=resistance_touches,
         containment_ratio=round(containment_ratio, 4),
+        rotation_count=rotation_count,
+        support_reaction_strength=round(support_reaction, 4),
+        resistance_reaction_strength=round(resistance_reaction, 4),
+        tightness=round(tightness, 4),
+        trend_leakage=round(trend_leakage, 4),
     )

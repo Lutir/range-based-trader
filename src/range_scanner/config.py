@@ -16,13 +16,3 @@ class ScannerConfig(BaseModel):
     zone_tolerance_min_pct: float = 1.0
     touch_max_benefit: int = 4
     top: int = 20
-
-    # Scoring weights (must sum to 100)
-    weight_liquidity: float = 10
-    weight_range_width: float = 15
-    weight_support_touches: float = 15
-    weight_resistance_touches: float = 15
-    weight_containment: float = 20
-    weight_adx: float = 15
-    weight_ema_slope: float = 5
-    weight_atr_stability: float = 5

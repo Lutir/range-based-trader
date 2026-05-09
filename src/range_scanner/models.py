@@ -19,6 +19,11 @@ class RangeStructure(BaseModel):
     support_touches: int
     resistance_touches: int
     containment_ratio: float
+    rotation_count: int = 0
+    support_reaction_strength: float = 0.0
+    resistance_reaction_strength: float = 0.0
+    tightness: float = 0.0
+    trend_leakage: float = 0.0
 
 
 class ScoreBreakdown(BaseModel):
@@ -27,8 +32,12 @@ class ScoreBreakdown(BaseModel):
     support_touch_score: float
     resistance_touch_score: float
     containment_score: float
+    rotation_score: float
+    reaction_score: float
+    tightness_score: float
     adx_score: float
     ema_slope_score: float
+    trend_leakage_score: float
     atr_stability_score: float
     total: float
 
@@ -49,6 +58,9 @@ class TickerScanResult(BaseModel):
     avg_volume_20: float | None = None
     avg_dollar_volume_20: float | None = None
     latest_close: float | None = None
+    rotation_count: int | None = None
+    tightness: float | None = None
+    trend_leakage: float | None = None
     data_start: str | None = None
     data_end: str | None = None
     risk_note: str = ""
