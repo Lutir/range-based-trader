@@ -16,7 +16,7 @@ def score_liquidity(avg_dollar_volume: float, config: ScannerConfig) -> float:
 
 
 def score_range_width(range_width_pct: float) -> float:
-    """Tighter sweet spot: 3-8% is ideal. Heavily penalize >12%."""
+    """Tight sweet spot: 3-8% ideal. Hard penalty >12%, reject >25%."""
     if range_width_pct < 2:
         return _clamp(range_width_pct / 2 * 30)
     if range_width_pct <= 3:
@@ -26,7 +26,9 @@ def score_range_width(range_width_pct: float) -> float:
     if range_width_pct <= 12:
         return _clamp(100 - (range_width_pct - 8) / 4 * 70)
     if range_width_pct <= 15:
-        return _clamp(30 - (range_width_pct - 12) / 3 * 25)
+        return _clamp(30 - (range_width_pct - 12) / 3 * 20)
+    if range_width_pct <= 25:
+        return _clamp(10 - (range_width_pct - 15) / 10 * 10)
     return 0.0
 
 
@@ -38,7 +40,6 @@ def score_touches(touches: int, max_benefit: int = 4) -> float:
 
 
 def score_reaction_strength(avg_reaction_pct: float) -> float:
-    """Reward strong reactions (sharp reversals), penalize weak lazy touches."""
     if avg_reaction_pct >= 2.0:
         return 100.0
     if avg_reaction_pct >= 1.0:
@@ -57,7 +58,6 @@ def score_containment(containment_ratio: float) -> float:
 
 
 def score_rotation(rotation_count: int) -> float:
-    """Reward actual oscillations between zones. This is the key differentiator."""
     if rotation_count >= 8:
         return 100.0
     if rotation_count >= 5:
@@ -70,7 +70,6 @@ def score_rotation(rotation_count: int) -> float:
 
 
 def score_tightness(tightness: float) -> float:
-    """Reward range utilization — closes should use the full range, not cluster at midpoint."""
     if tightness >= 0.5:
         return 100.0
     if tightness >= 0.3:
@@ -97,7 +96,6 @@ def score_ema_slope(abs_slope_pct: float) -> float:
 
 
 def score_trend_leakage(leakage: float) -> float:
-    """Penalize sequential higher-highs/higher-lows pattern."""
     if leakage <= 0.15:
         return 100.0
     if leakage <= 0.35:
@@ -139,12 +137,13 @@ def compute_score(
     trend_s = score_trend_leakage(structure.trend_leakage)
     atr_s = score_atr_stability(atr_pct)
 
-    # New weight distribution prioritizing rotational structure
-    # Rotation + reaction strength = 30% (the core "is this a real range?" signal)
+    # Weight distribution:
+    # Rotation + reaction = 30% (core "is this a real range?" signal)
     # Structure quality = 25% (containment + tightness + range width)
     # Anti-trend = 20% (ADX + EMA slope + trend leakage)
-    # Touches = 15% (with reaction quality baked in)
+    # Touches = 10%
     # Liquidity + ATR = 10% (filter, not differentiator)
+    # Minimum rotation gate = 5% bonus/penalty
     total = (
         rot * 20 / 100
         + ((sr + rr) / 2) * 10 / 100
@@ -159,6 +158,19 @@ def compute_score(
         + liq * 5 / 100
         + atr_s * 5 / 100
     )
+
+    # Hard width cap: wide ranges cannot score as excellent regardless of other metrics
+    if structure.range_width_pct > 25:
+        total = min(total, 30.0)
+    elif structure.range_width_pct > 15:
+        total = min(total, 50.0)
+    elif structure.range_width_pct > 12:
+        total = min(total, 65.0)
+
+    # Minimum rotation requirement: no rotations = hard cap
+    if structure.rotation_count < 2:
+        total = min(total, 55.0)
+
     total = _clamp(total)
 
     return ScoreBreakdown(
@@ -178,13 +190,83 @@ def compute_score(
     )
 
 
-def classify_verdict(score: float, adx: float, ema_slope_pct: float, trend_leakage: float) -> Verdict:
+def compute_sub_scores(breakdown: ScoreBreakdown) -> tuple[float, float, float]:
+    """Compute explainable sub-scores: (structure, regime, liquidity)."""
+    structure = (
+        breakdown.rotation_score * 0.30
+        + breakdown.reaction_score * 0.20
+        + breakdown.containment_score * 0.20
+        + breakdown.tightness_score * 0.15
+        + breakdown.range_width_score * 0.15
+    )
+    regime = (
+        breakdown.adx_score * 0.40
+        + breakdown.ema_slope_score * 0.25
+        + breakdown.trend_leakage_score * 0.35
+    )
+    liquidity = (
+        breakdown.liquidity_score * 0.60
+        + breakdown.atr_stability_score * 0.40
+    )
+    return round(structure, 1), round(regime, 1), round(liquidity, 1)
+
+
+def classify_verdict(
+    score: float, adx: float, ema_slope_pct: float,
+    trend_leakage: float, range_width_pct: float, rotation_count: int,
+) -> Verdict:
+    # Hard gates first
     if adx > 30 or abs(ema_slope_pct) > 6 or trend_leakage > 0.5:
         return Verdict.TRENDING_NOT_RANGE
-    if score >= 75 and adx < 25:
+    if range_width_pct > 25:
+        return Verdict.TOO_WIDE
+    if range_width_pct > 15:
+        return Verdict.WIDE_RANGE
+
+    # Score-based classification
+    if score >= 75 and adx < 25 and rotation_count >= 3:
         return Verdict.EXCELLENT_RANGE
     if score >= 55:
         return Verdict.WATCHLIST
     if score >= 35:
         return Verdict.MESSY_RANGE
     return Verdict.MESSY_RANGE
+
+
+def generate_reason(
+    structure: RangeStructure, adx: float, ema_slope_pct: float, verdict: Verdict
+) -> str:
+    """Generate human-readable explanation for the verdict."""
+    parts: list[str] = []
+
+    if structure.rotation_count >= 5:
+        parts.append(f"{structure.rotation_count} rotations (strong)")
+    elif structure.rotation_count >= 3:
+        parts.append(f"{structure.rotation_count} rotations (adequate)")
+    else:
+        parts.append(f"Only {structure.rotation_count} rotations (weak)")
+
+    if structure.range_width_pct > 15:
+        parts.append(f"width {structure.range_width_pct:.1f}% (too wide)")
+    elif structure.range_width_pct > 10:
+        parts.append(f"width {structure.range_width_pct:.1f}% (wide)")
+    elif structure.range_width_pct >= 3:
+        parts.append(f"width {structure.range_width_pct:.1f}% (good)")
+    else:
+        parts.append(f"width {structure.range_width_pct:.1f}% (tight)")
+
+    if verdict == Verdict.TRENDING_NOT_RANGE:
+        if adx > 30:
+            parts.append(f"ADX {adx:.0f} (trending)")
+        if abs(ema_slope_pct) > 6:
+            parts.append(f"EMA slope {ema_slope_pct:.1f}% (directional)")
+        if structure.trend_leakage > 0.5:
+            parts.append(f"trend leakage {structure.trend_leakage:.0%}")
+
+    avg_reaction = (structure.support_reaction_strength + structure.resistance_reaction_strength) / 2
+    if avg_reaction >= 1.5:
+        parts.append("strong reactions")
+    elif avg_reaction < 0.5:
+        parts.append("weak reactions")
+
+    return "; ".join(parts)

@@ -9,11 +9,12 @@ from range_scanner.models import TickerScanResult
 console = Console()
 
 CSV_COLUMNS = [
-    "ticker", "score", "verdict", "support", "resistance", "range_width_pct",
+    "ticker", "score", "verdict", "structure_score", "regime_score", "liquidity_score",
+    "support", "resistance", "range_width_pct",
     "support_touches", "resistance_touches", "containment_ratio",
     "rotation_count", "tightness", "trend_leakage",
     "adx_14", "atr_pct", "ema20_slope_pct", "avg_volume_20", "avg_dollar_volume_20",
-    "latest_close", "data_start", "data_end", "risk_note", "skip_reason",
+    "latest_close", "data_start", "data_end", "risk_note", "reason", "skip_reason",
 ]
 
 
@@ -26,6 +27,9 @@ def write_csv(results: list[TickerScanResult], path: Path) -> None:
                 "ticker": r.ticker,
                 "score": r.score,
                 "verdict": r.verdict.value,
+                "structure_score": r.structure_score if r.structure_score is not None else "",
+                "regime_score": r.regime_score if r.regime_score is not None else "",
+                "liquidity_score": r.liquidity_score if r.liquidity_score is not None else "",
                 "support": r.support if r.support is not None else "",
                 "resistance": r.resistance if r.resistance is not None else "",
                 "range_width_pct": r.range_width_pct if r.range_width_pct is not None else "",
@@ -44,6 +48,7 @@ def write_csv(results: list[TickerScanResult], path: Path) -> None:
                 "data_start": r.data_start or "",
                 "data_end": r.data_end or "",
                 "risk_note": r.risk_note,
+                "reason": r.reason,
                 "skip_reason": r.skip_reason,
             }
             writer.writerow(row)
@@ -63,17 +68,23 @@ def print_summary(results: list[TickerScanResult], top: int, total_scanned: int)
         console.print("[yellow]No range candidates found.[/yellow]")
         return
 
-    table = Table(title="Top Range Candidates")
-    table.add_column("#", style="dim")
-    table.add_column("Ticker", style="bold")
-    table.add_column("Score")
-    table.add_column("Verdict")
-    table.add_column("Range")
-    table.add_column("Based On")
+    table = Table(title="Top Range Candidates", show_lines=True)
+    table.add_column("#", style="dim", width=3)
+    table.add_column("Ticker", style="bold", width=6)
+    table.add_column("Score", width=5)
+    table.add_column("Str/Reg/Liq", width=12)
+    table.add_column("Verdict", width=18)
+    table.add_column("Range", width=14)
+    table.add_column("Rot", width=3)
+    table.add_column("Reason")
 
     for i, r in enumerate(ranked, 1):
-        range_str = f"{r.support:.2f}–{r.resistance:.2f}" if r.support and r.resistance else "N/A"
-        date_str = f"{r.data_start} to {r.data_end}" if r.data_start and r.data_end else "N/A"
-        table.add_row(str(i), r.ticker, f"{r.score:.1f}", r.verdict.value, range_str, date_str)
+        range_str = f"{r.support:.1f}–{r.resistance:.1f}" if r.support and r.resistance else "N/A"
+        sub = f"{r.structure_score:.0f}/{r.regime_score:.0f}/{r.liquidity_score:.0f}" if r.structure_score is not None else "–"
+        rot_str = str(r.rotation_count) if r.rotation_count is not None else "–"
+        table.add_row(
+            str(i), r.ticker, f"{r.score:.0f}", sub,
+            r.verdict.value, range_str, rot_str, r.reason,
+        )
 
     console.print(table)

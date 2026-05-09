@@ -5,7 +5,9 @@ from pydantic import BaseModel
 class Verdict(str, Enum):
     EXCELLENT_RANGE = "EXCELLENT_RANGE"
     WATCHLIST = "WATCHLIST"
+    WIDE_RANGE = "WIDE_RANGE"
     MESSY_RANGE = "MESSY_RANGE"
+    TOO_WIDE = "TOO_WIDE"
     TRENDING_NOT_RANGE = "TRENDING_NOT_RANGE"
     ILLIQUID = "ILLIQUID"
     INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
@@ -61,7 +63,12 @@ class TickerScanResult(BaseModel):
     rotation_count: int | None = None
     tightness: float | None = None
     trend_leakage: float | None = None
+    # Sub-scores for explainability
+    structure_score: float | None = None
+    regime_score: float | None = None
+    liquidity_score: float | None = None
     data_start: str | None = None
     data_end: str | None = None
     risk_note: str = ""
+    reason: str = ""
     skip_reason: str = ""

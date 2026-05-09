@@ -9,7 +9,7 @@ from range_scanner.data import fetch_bars
 from range_scanner.indicators import compute_adx, compute_atr_pct, compute_ema_slope_pct
 from range_scanner.models import TickerScanResult, Verdict
 from range_scanner.output import console, print_summary, write_csv
-from range_scanner.scoring import classify_verdict, compute_score
+from range_scanner.scoring import classify_verdict, compute_score, compute_sub_scores, generate_reason
 from range_scanner.structure import detect_range_structure
 
 app = typer.Typer(help="Range Candidate Scanner")
@@ -97,8 +97,13 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
         )
 
     breakdown = compute_score(structure, adx_val, atr_pct, ema_slope, avg_dollar_volume, config)
-    verdict = classify_verdict(breakdown.total, adx_val, ema_slope, structure.trend_leakage)
+    verdict = classify_verdict(
+        breakdown.total, adx_val, ema_slope,
+        structure.trend_leakage, structure.range_width_pct, structure.rotation_count,
+    )
     risk_note = _compute_risk_note(df["close"], structure.support, structure.resistance)
+    structure_score, regime_score, liquidity_sc = compute_sub_scores(breakdown)
+    reason = generate_reason(structure, adx_val, ema_slope, verdict)
 
     return TickerScanResult(
         ticker=ticker,
@@ -119,9 +124,13 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> TickerScanResult:
         rotation_count=structure.rotation_count,
         tightness=structure.tightness,
         trend_leakage=structure.trend_leakage,
+        structure_score=structure_score,
+        regime_score=regime_score,
+        liquidity_score=liquidity_sc,
         data_start=data_start,
         data_end=data_end,
         risk_note=risk_note,
+        reason=reason,
     )
 
 

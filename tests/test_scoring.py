@@ -3,6 +3,7 @@ from range_scanner.models import RangeStructure, Verdict
 from range_scanner.scoring import (
     classify_verdict,
     compute_score,
+    compute_sub_scores,
     score_adx,
     score_atr_stability,
     score_containment,
@@ -42,7 +43,7 @@ class TestScoreRangeWidth:
         assert score_range_width(13.0) < 25
 
     def test_extremely_wide(self):
-        assert score_range_width(16.0) == 0.0
+        assert score_range_width(26.0) == 0.0
 
 
 class TestScoreTouches:
@@ -183,16 +184,50 @@ class TestComputeScore:
 
 class TestClassifyVerdict:
     def test_excellent(self):
-        assert classify_verdict(80, adx=18, ema_slope_pct=1.0, trend_leakage=0.1) == Verdict.EXCELLENT_RANGE
+        assert classify_verdict(80, adx=18, ema_slope_pct=1.0, trend_leakage=0.1,
+                                range_width_pct=6.0, rotation_count=5) == Verdict.EXCELLENT_RANGE
 
     def test_trending_by_adx(self):
-        assert classify_verdict(70, adx=35, ema_slope_pct=2.0, trend_leakage=0.1) == Verdict.TRENDING_NOT_RANGE
+        assert classify_verdict(70, adx=35, ema_slope_pct=2.0, trend_leakage=0.1,
+                                range_width_pct=6.0, rotation_count=5) == Verdict.TRENDING_NOT_RANGE
 
     def test_trending_by_leakage(self):
-        assert classify_verdict(70, adx=22, ema_slope_pct=3.0, trend_leakage=0.6) == Verdict.TRENDING_NOT_RANGE
+        assert classify_verdict(70, adx=22, ema_slope_pct=3.0, trend_leakage=0.6,
+                                range_width_pct=6.0, rotation_count=5) == Verdict.TRENDING_NOT_RANGE
+
+    def test_too_wide(self):
+        assert classify_verdict(70, adx=18, ema_slope_pct=1.0, trend_leakage=0.1,
+                                range_width_pct=30.0, rotation_count=5) == Verdict.TOO_WIDE
+
+    def test_wide_range(self):
+        assert classify_verdict(70, adx=18, ema_slope_pct=1.0, trend_leakage=0.1,
+                                range_width_pct=18.0, rotation_count=5) == Verdict.WIDE_RANGE
+
+    def test_excellent_requires_rotations(self):
+        assert classify_verdict(80, adx=18, ema_slope_pct=1.0, trend_leakage=0.1,
+                                range_width_pct=6.0, rotation_count=1) == Verdict.WATCHLIST
 
     def test_watchlist(self):
-        assert classify_verdict(60, adx=22, ema_slope_pct=3.0, trend_leakage=0.2) == Verdict.WATCHLIST
+        assert classify_verdict(60, adx=22, ema_slope_pct=3.0, trend_leakage=0.2,
+                                range_width_pct=6.0, rotation_count=3) == Verdict.WATCHLIST
 
     def test_messy(self):
-        assert classify_verdict(40, adx=22, ema_slope_pct=3.0, trend_leakage=0.2) == Verdict.MESSY_RANGE
+        assert classify_verdict(40, adx=22, ema_slope_pct=3.0, trend_leakage=0.2,
+                                range_width_pct=6.0, rotation_count=3) == Verdict.MESSY_RANGE
+
+
+class TestSubScores:
+    def test_sub_scores_computed(self):
+        config = ScannerConfig()
+        structure = RangeStructure(
+            support=100.0, resistance=106.0, range_width_pct=6.0,
+            support_touches=4, resistance_touches=4, containment_ratio=0.88,
+            rotation_count=8, support_reaction_strength=2.0,
+            resistance_reaction_strength=1.8, tightness=0.55, trend_leakage=0.1,
+        )
+        breakdown = compute_score(structure, adx=15.0, atr_pct=2.5, ema_slope_pct=0.5,
+                                  avg_dollar_volume=200_000_000, config=config)
+        struct_s, regime_s, liq_s = compute_sub_scores(breakdown)
+        assert struct_s > 0
+        assert regime_s > 0
+        assert liq_s > 0
