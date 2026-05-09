@@ -1,0 +1,55 @@
+# Utilities — Utility stocks
+# Classic range-bound universe: regulated monopolies with rate-case-driven earnings.
+# Dividend yield provides hard price floor; stretched valuations provide ceiling.
+# Best range candidates in the market — low ADX is endemic to this sector.
+
+# Electric Utilities
+NEE
+DUK
+SO
+D
+AEP
+EXC
+XEL
+ED
+SRE
+PCG
+EIX
+WEC
+DTE
+ETR
+PPL
+AES
+AEE
+LNT
+EVRG
+PNW
+NI
+OGE
+ELES
+AVA
+MGEE
+IDACORP
+IDA
+
+# Water Utilities
+AWK
+WTRG
+SJW
+YORW
+CTWS
+MSEX
+
+# Natural Gas
+UGI
+NJR
+SR
+SWX
+SPOK
+
+# Multi-Utility
+CMS
+NRG
+PEG
+CLECO
+BKH

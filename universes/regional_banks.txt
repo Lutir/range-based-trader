@@ -1,0 +1,65 @@
+# Regional Banks — Mid-cap regional banking stocks
+# Useful for range scanning: net interest margin sensitivity to Fed rate cycles
+# creates multi-quarter plateaus. Book value provides hard floor.
+# M&A activity (acquisition rumors) creates ceiling compression.
+
+# Large Regionals
+USB
+TFC
+PNC
+CFG
+FITB
+HBAN
+KEY
+RF
+MTB
+CMA
+ZION
+WAL
+SIVB
+FHB
+
+# Mid-Size Regionals
+BOKF
+UMBF
+FNB
+SNV
+PVTB
+IBCP
+FFIN
+HTLF
+CVBF
+PACW
+BANR
+BKU
+SBCF
+TBBK
+CATY
+HOPE
+HAFC
+NBTB
+SRCE
+SBNY
+EFSC
+FBMS
+EGBN
+ENVA
+FBIZ
+TOWN
+TCBK
+AROW
+HOMB
+FULT
+ISBC
+
+# Specialty / Focus
+EWBC
+WAFD
+WSFS
+HIFS
+PKBK
+TBNK
+NWBI
+FBNC
+AMSF
+VBTX

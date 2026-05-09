@@ -1,0 +1,61 @@
+# Consumer Staples — Food, beverage, household products
+# Excellent range-scanning universe: non-cyclical demand, pricing power creates
+# steady earnings. Stocks oscillate between P/E expansion and mean-reversion.
+# Dividend yield + buybacks creates consistent demand at pullbacks.
+
+# Beverages
+KO
+PEP
+MNST
+KDP
+STZ
+TAP
+BUD
+SAM
+FIZZ
+
+# Food / Packaged Goods
+GIS
+K
+CPB
+HRL
+SJM
+CAG
+MKC
+MDLZ
+HSY
+LANC
+THS
+JJSF
+
+# Household / Personal Care
+PG
+CL
+CLX
+CHD
+HENKY
+UN
+KMB
+COTY
+ELF
+KVUE
+
+# Tobacco
+MO
+PM
+BTI
+VGR
+
+# Discount / Warehouse Retail
+WMT
+COST
+DG
+DLTR
+
+# Drug Retail
+CVS
+WBA
+
+# Pet / Specialty
+FRPT
+CENTA

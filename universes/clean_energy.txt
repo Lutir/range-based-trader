@@ -1,0 +1,71 @@
+# Clean Energy — Solar, wind, EV, battery, and related stocks
+# Useful for range scanning: policy-sensitive sector that trades in
+# well-defined ranges between IRA/subsidy news catalysts.
+# Sector rotation creates clear institutional buy/sell zones.
+
+# Solar
+ENPH
+SEDG
+FSLR
+SPWR
+ARRY
+RUN
+NOVA
+SHLS
+CSIQ
+JKS
+MAXN
+GTLS
+
+# Wind / Offshore
+TPI
+ITRI
+
+# EV Manufacturers
+TSLA
+RIVN
+LCID
+FFIE
+MULN
+GOEV
+NKLA
+SOLO
+
+# EV Charging
+CHPT
+EVGO
+BLNK
+
+# Battery / Energy Storage
+QS
+ENVX
+SES
+CBAT
+
+# Grid / Utilities Infrastructure
+NEE
+AES
+BEP
+CWEN
+HASI
+NOVA
+ARRY
+
+# Hydrogen / Fuel Cell
+PLUG
+FCEL
+BLDP
+HTOO
+
+# Rare Earths / Critical Minerals
+MP
+LAC
+LTHM
+PLL
+ALB
+SQM
+LTHM
+
+# Electric Grid / Smart Grid
+ITRI
+AMSC

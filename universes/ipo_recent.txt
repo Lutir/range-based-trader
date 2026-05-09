@@ -1,0 +1,39 @@
+# Recent IPOs — Notable IPOs from 2024-2026
+# Useful for range scanning: newly public companies often establish a
+# "post-IPO base" 6-12 months after listing as lockup expiration selling
+# subsides and institutional ownership stabilizes. Classic range setup.
+# Higher risk due to limited price history — use shorter lookback windows.
+
+# 2026 IPOs
+KLAV
+SFEN
+MFIN
+COUR
+PVNC
+SPNS
+NNOX
+
+# 2025 IPOs
+RDDT
+KD
+RBRK
+SAIL
+MBLY
+CLFD
+CART
+CRWV
+NPCE
+KLVN
+
+# 2024 IPOs
+ALAB
+AMER
+LINE
+TEM
+RAMP
+SWRX
+IBOTTA
+LOAR
+LNZA
+VICR
+SOLV

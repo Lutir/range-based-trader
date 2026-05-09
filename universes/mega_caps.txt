@@ -1,0 +1,33 @@
+# Mega Caps — Top 30 US Companies by Market Cap (mid-2026)
+# Useful for range scanning: extreme liquidity, tight bid/ask spreads,
+# well-defined institutional S/R levels. Options flow creates magnetic price zones.
+AAPL
+NVDA
+MSFT
+AMZN
+GOOGL
+META
+TSLA
+AVGO
+BRK.B
+LLY
+TSM
+JPM
+V
+UNH
+XOM
+MA
+COST
+JNJ
+WMT
+NFLX
+HD
+ORCL
+BAC
+SAP
+ASML
+KO
+CRM
+CVX
+PG
+AMD

@@ -1,0 +1,99 @@
+# International ADRs — Major foreign companies listed in US
+# Useful for range scanning: ADRs often lag domestic markets, creating
+# compression phases as US investors wait for foreign catalyst clarity.
+# Currency and geopolitical risk can extend ranges significantly.
+
+# Taiwan / Korea / Asia Tech
+TSM
+ASML
+SAP
+SONY
+TM
+HMC
+BIDU
+BABA
+JD
+PDD
+NIO
+XPEV
+LI
+SE
+GRAB
+SEA
+
+# European Large Caps
+ASML
+SAP
+NVS
+NOVN
+UL
+NSRGY
+AZN
+GSK
+BP
+SHEL
+TTE
+BHP
+RIO
+VALE
+FCX
+BTI
+
+# Japan
+TM
+HMC
+SONY
+SNE
+OTSKY
+KYOCY
+FUJIY
+
+# India
+INFY
+WIT
+HDB
+IBN
+REDDY
+TTM
+
+# China Internet / Tech
+BIDU
+BABA
+JD
+PDD
+TCEHY
+NTES
+VIPS
+IQ
+MOMO
+DOYU
+EDU
+TAL
+LAIX
+
+# Latin America
+MELI
+DESP
+VTEX
+VALE
+
+# Israel Tech
+CHKP
+NICE
+MNDY
+GLBE
+WIX
+FVRR
+
+# Canada
+SHOP
+CNQ
+SU
+ENB
+TRP
+ABEV
+
+# Australia / Pacific
+BHP
+RIO
+ANZBY

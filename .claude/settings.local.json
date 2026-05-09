@@ -11,7 +11,8 @@
       "Bash(awk -F, '$3 ~ /INSUFFICIENT|ILLIQUID|ERROR/ {print $1, $3, $NF}')",
       "Bash(pip install *)",
       "Bash(xargs ls -t)",
-      "Bash(awk '{print $1\" \"$2}')"
+      "Bash(awk '{print $1\" \"$2}')",
+      "Bash(awk '{print $NF, $5}')"
     ]
   }
 }

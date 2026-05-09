@@ -1,0 +1,59 @@
+# Semiconductors — Major semiconductor stocks (beyond SMH components)
+# Useful for range scanning: cyclical industry with clear inventory cycle tops/bottoms.
+# AI capex cycles create multi-month consolidations in both leaders and laggards.
+# High dollar volume ensures reliable S/R levels.
+
+# Large Cap / Index Leaders
+NVDA
+AVGO
+TSM
+ASML
+AMD
+INTC
+QCOM
+TXN
+AMAT
+LRCX
+KLAC
+MU
+ADI
+MCHP
+NXPI
+ON
+MRVL
+MPWR
+SWKS
+QRVO
+ENTG
+WOLF
+TER
+ACLS
+ONTO
+FORM
+AMBA
+SLAB
+RMBS
+DIOD
+SMTC
+CAMT
+
+# Mid Cap Specialty
+ALGM
+SITM
+POWI
+SYNA
+AOSL
+COHU
+ICHR
+UCTT
+KLIC
+AMKR
+MKSI
+CCMP
+
+# Memory / Storage Adjacent
+WDC
+STX
+
+# Pure-play AI silicon
+SMCI

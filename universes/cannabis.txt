@@ -1,0 +1,38 @@
+# Cannabis — Cannabis stocks
+# Volatile, speculative universe. Range scanning here targets the
+# consolidation phases between DEA rescheduling news cycles and state legalization
+# catalysts. Low liquidity means false breakouts are common — verify dollar volume.
+# Use high min-dollar-volume filter (e.g. $5M+) to avoid illiquid names.
+
+# US Multi-State Operators (MSOs)
+CURLF
+TCNNF
+CCHW
+GTBIF
+AYRWF
+JUSHF
+CRLBF
+VRSSF
+FLGC
+VEXT
+
+# Canadian Licensed Producers (TSX cross-listed on OTC/NYSE)
+CGC
+ACB
+TLRY
+CRON
+HEXO
+OGI
+SNDL
+HITI
+
+# Ancillary / Picks & Shovels
+IIPR
+SMG
+HYFM
+GNLN
+KERN
+
+# Pharmaceutical Cannabis
+INMD
+GW

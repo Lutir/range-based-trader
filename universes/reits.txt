@@ -1,0 +1,82 @@
+# REITs — Major Real Estate Investment Trusts
+# Ideal for range scanning: dividend yield anchors price in bands.
+# Rate-sensitive; when rates stabilize, REITs often trade in well-defined ranges.
+# Low price volatility relative to growth stocks — very clean S/R structure.
+
+# Data Centers (high growth, still range after AI buildout pause)
+EQIX
+DLR
+CONE
+IREN
+
+# Cell Towers / Infrastructure
+AMT
+CCI
+SBAC
+
+# Industrial / Logistics
+PLD
+REXR
+EGP
+STAG
+FR
+
+# Office
+BXP
+SLG
+VNO
+HIW
+OFC
+CTRE
+
+# Retail
+SPG
+O
+NNN
+ADC
+EPRT
+ROIC
+KIM
+REG
+EQY
+MAC
+SKT
+
+# Residential
+AVB
+EQR
+ESS
+MAA
+UDR
+CPT
+NMI
+NXRT
+ELME
+IRT
+
+# Healthcare
+WELL
+VTR
+HR
+CTRE
+MPW
+GMRE
+PEAK
+
+# Self Storage
+PSA
+EXR
+LSI
+CUBE
+NSA
+
+# Specialty / Diversified
+VICI
+GLPI
+WPC
+LTC
+IIPR
+SRC
+PINE
+FCPT
+NETSTREIT

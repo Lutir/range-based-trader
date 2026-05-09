@@ -1,0 +1,58 @@
+# Meme / Speculative — High retail interest, volatile, social-media-driven names
+# Useful for range scanning: after initial squeeze/meme events, many of these
+# names settle into ranges as retail holders establish average cost basis.
+# Range scanner helps identify when a meme stock is "resting" vs. about to move.
+# WARNING: Use very high min-dollar-volume and be skeptical of "clean" ranges here.
+
+# Original Meme Cohort
+GME
+AMC
+BBBY
+BB
+NOK
+EXPR
+KOSS
+SNDL
+
+# 2024-2025 Meme Cohort
+DJT
+PHUN
+FFIE
+MULN
+SPGX
+NKLA
+
+# Crypto / Blockchain Adjacent
+MSTR
+COIN
+MARA
+RIOT
+CLSK
+HUT
+BITF
+BTBT
+WULF
+IREN
+
+# Reddit / WallStreetBets Favorites
+PLTR
+NIO
+LCID
+RIVN
+SOFI
+OPEN
+PRTY
+XELA
+CLOV
+SPCE
+
+# High Volatility Speculative
+RCAT
+JOBY
+ACHR
+LILM
+SPIR
+MYND
+AGEN
+ASNS
+KALA

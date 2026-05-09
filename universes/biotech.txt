@@ -1,0 +1,67 @@
+# Biotech — Major biotech stocks
+# Useful for range scanning: binary catalyst events (FDA decisions, trial readouts)
+# create hard ceilings and floors. Between events, stocks often consolidate in tight boxes.
+# Large caps with approved products behave like steady ranges; small caps are high-risk.
+
+# Large Cap / Commercial Stage (most range-scannable)
+AMGN
+GILD
+VRTX
+REGN
+BIIB
+MRNA
+ILMN
+NBIX
+ALNY
+INCY
+EXEL
+HALO
+ARWR
+BMRN
+IONS
+UTHR
+RARE
+FOLD
+ACAD
+ITCI
+PTGX
+KRTX
+ROIVANT
+IMVT
+PRTA
+
+# Mid Cap Pipeline
+SGEN
+BEAM
+EDIT
+CRSP
+NTLA
+TPTX
+KYMR
+ARVN
+VKTX
+PRTK
+MRTX
+KPTI
+KDNY
+MGTX
+
+# Small Cap / High Risk (volatile, speculative ranges)
+ADMA
+ACRS
+NKTR
+ARDX
+CORT
+PRPH
+MNKD
+IOVA
+FATE
+BLUE
+APLS
+RCUS
+YMAB
+KALA
+ACMR
+HOOK
+MYOV
+VCNX

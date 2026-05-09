@@ -1,0 +1,67 @@
+# High Short Interest — Stocks known for elevated short interest
+# Useful for range scanning: heavily shorted stocks often range because
+# short sellers re-enter at resistance and cover at support, creating
+# mechanical, repeatable price bands. Also identifies squeeze setups.
+# Short data changes weekly — treat as a starting list, verify current SI%.
+
+# Perennially Heavily Shorted
+GME
+BYND
+SPCE
+NKLA
+LCID
+RIVN
+FFIE
+MULN
+OPEN
+CLOV
+HOOD
+SOFI
+UPST
+
+# High SI Retail Favorites
+AMC
+BB
+NOK
+BBBY
+SNDL
+MVIS
+
+# Short-heavy Growth Names
+PTON
+NKLA
+BLNK
+CHPT
+EVGO
+QS
+PLUG
+FCEL
+HYLN
+GOEV
+
+# Heavily Shorted Small Caps
+PRTY
+XELA
+GOED
+OPAD
+CURI
+SPRT
+TTOO
+BCYC
+
+# Crypto / Speculative Short Targets
+MARA
+RIOT
+CLSK
+HUT
+BITF
+COIN
+MSTR
+
+# Short-interest Notable Earnings Names
+SNAP
+PINS
+LYFT
+RBLX
+DASH
+UBER

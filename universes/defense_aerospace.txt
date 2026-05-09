@@ -1,0 +1,48 @@
+# Defense / Aerospace — Defense contractors and aerospace
+# Useful for range scanning: long-cycle government contracts create stable, predictable
+# revenue streams. Stocks often range between budget cycle announcements.
+# Geopolitical events create temporary breakouts followed by consolidation.
+
+# Prime Defense Contractors
+LMT
+RTX
+NOC
+GD
+BA
+LHX
+
+# Aerospace Manufacturing
+HWM
+TDG
+HEICO
+HEI
+SPR
+KTOS
+
+# Defense / IT Services
+LDOS
+SAIC
+CACI
+BAH
+
+# Space / Satellites
+RKLB
+ASTS
+SPIR
+BWXT
+
+# Drones / Autonomy
+AVAV
+JOBY
+ACHR
+
+# Government Technology
+SAIC
+CACI
+KEYW
+
+# Additional large caps
+TXT
+CW
+DRS
+WWD

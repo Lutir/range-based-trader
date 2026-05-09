@@ -1,0 +1,71 @@
+# AI / Robotics — AI and robotics themed stocks
+# Useful for range scanning: after explosive 2023-2024 AI hype moves,
+# many of these names entered multi-month consolidation phases.
+# Range scan finds names digesting gains before the next leg up or distribution.
+
+# AI Infrastructure / Compute
+NVDA
+AMD
+INTC
+AVGO
+SMCI
+DELL
+HPE
+ARM
+MRVL
+
+# AI Software / Platforms
+MSFT
+GOOGL
+META
+AMZN
+ORCL
+IBM
+PLTR
+AI
+PATH
+BBAI
+SOUN
+IREN
+APLD
+
+# Robotics / Automation
+FANUY
+IRBT
+ISRG
+ABB
+ROK
+EMR
+PH
+BRKS
+NNDM
+MKFG
+TNDM
+
+# AI Hardware / Edge
+QCOM
+TXN
+MCHP
+ADI
+ONTO
+
+# Autonomous Vehicles
+TSLA
+UBER
+LYFT
+MBLY
+LAZR
+LIDR
+OUST
+INVZ
+
+# AI-native Startups (recently listed)
+SOUN
+BBAI
+GFAI
+PRCT
+DTIL
+
+# Humanoid / Physical AI
+HUMA
+AIOT

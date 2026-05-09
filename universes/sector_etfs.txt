@@ -1,0 +1,157 @@
+# Sector ETFs — Major sector and thematic ETFs
+# Useful for range scanning: ETFs represent aggregate sector behavior.
+# When individual stocks diverge, the ETF often still ranges cleanly.
+# Also useful for confirming sector-wide S/R before scanning individual names.
+
+# SPDR Sector ETFs (S&P 500 sectors)
+SPY
+QQQ
+DIA
+IWM
+XLK
+XLF
+XLV
+XLE
+XLY
+XLP
+XLU
+XLI
+XLB
+XLRE
+XLC
+
+# Nasdaq / Growth
+QQQ
+QQQM
+QQEW
+QQQE
+
+# Technology Sub-Sectors
+SMH
+SOXX
+XSD
+IGV
+SKYY
+WCLD
+CLOU
+BUG
+HACK
+CIBR
+ROBO
+BOTZ
+
+# Financials
+KRE
+KBE
+KIE
+IAT
+KBWB
+
+# Healthcare
+IBB
+XBI
+IHI
+ARKG
+GNOM
+CURE
+
+# Energy / Commodities
+XLE
+OIH
+XOP
+AMLP
+MLPX
+USO
+UNG
+GLD
+SLV
+IAU
+PPLT
+PALL
+CPER
+
+# Real Estate
+XLRE
+VNQ
+REM
+MREIC
+SRVR
+
+# International
+EFA
+EEM
+FXI
+EWZ
+INDA
+EWJ
+EWC
+EWA
+EWG
+EWU
+VGK
+VEA
+VWO
+
+# Bonds / Fixed Income
+TLT
+IEF
+SHY
+HYG
+LQD
+BND
+AGG
+JNK
+BKLN
+SRLN
+
+# Thematic
+ARKK
+ARKG
+ARKF
+ARKQ
+ARKW
+ARKX
+DRIV
+KARS
+IDRV
+ICLN
+TAN
+FAN
+ACES
+QCLN
+CNRG
+LIT
+REMX
+COPX
+SILJ
+SIL
+GDXJ
+GDX
+
+# Volatility / Inverse
+VXX
+UVXY
+SVXY
+SQQQ
+SPXU
+TZA
+FAZ
+LABD
+
+# Dividend / Income
+DVY
+VYM
+SCHD
+HDV
+DGRO
+PEY
+SDY
+RDIV
+
+# Multi-Factor / Low Vol
+SPLV
+USMV
+LGLV
+QUAL
+MTUM
+SIZE

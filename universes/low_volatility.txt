@@ -1,0 +1,73 @@
+# Low Volatility — Low beta, steady-moving stocks
+# Best universe for clean range scanning: these stocks move slowly and
+# deliberately. S/R levels persist for months. ATR% is small but ranges
+# are reliable and repeatable. Ideal for options selling strategies.
+# These are the "boring is beautiful" names for range traders.
+
+# Utilities (lowest beta sector)
+NEE
+DUK
+SO
+ED
+WEC
+AEE
+CMS
+EVRG
+AWK
+SJW
+
+# Consumer Staples
+PG
+KO
+KMB
+CL
+CHD
+HRL
+JNJ
+PEP
+GIS
+MKC
+MDLZ
+
+# Healthcare Defensive
+JNJ
+ABT
+MDT
+ZTS
+HOLX
+XRAY
+PDCO
+
+# Insurance
+AFL
+CB
+MET
+PRU
+ALL
+TRV
+HIG
+
+# Real Estate / REITs
+O
+NNN
+ADC
+EPRT
+WPC
+NHI
+STAG
+EGP
+
+# Financials (stable)
+BRK.B
+V
+MA
+ADP
+PAYX
+
+# Industrials (steady)
+WM
+RSG
+CTAS
+ROL
+EXPD
+ODFL

@@ -1,0 +1,85 @@
+# Software / Cloud — Major SaaS and cloud infrastructure companies
+# Useful for range scanning: after hypergrowth multiple compression (2022-2023),
+# many SaaS names trade in multi-month consolidation boxes while fundamentals catch up.
+# Look for names that have stopped making new highs or lows — classic ranges.
+
+# Hyperscalers
+AMZN
+MSFT
+GOOGL
+META
+
+# Enterprise SaaS — CRM / Marketing
+CRM
+INTU
+ADP
+PAYC
+PAYX
+VEEV
+HUBS
+FRSH
+BRZE
+CWK
+
+# Security
+PANW
+CRWD
+ZS
+FTNT
+OKTA
+S
+SAIL
+TENB
+RBRK
+
+# DevOps / Infra
+SNOW
+DDOG
+MDB
+ESTC
+GTLB
+HCP
+CFLT
+PCTY
+
+# Collaboration / Productivity
+NOW
+WDAY
+TEAM
+ZM
+
+# Analytics / Data
+PLTR
+SPGI
+MSCI
+VRSK
+FICO
+
+# Vertical SaaS
+IOT
+TOST
+BILL
+NCNO
+PEGA
+APPF
+EVCM
+JAMF
+
+# Communication / CPaaS
+TWLO
+BAND
+MSGM
+
+# Content / Creative
+ADBE
+ANSS
+CDNS
+SNPS
+PTC
+AZPN
+ALTR
+
+# AI-native / Next gen
+AI
+PATH
+BBAI
