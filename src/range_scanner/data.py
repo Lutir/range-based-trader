@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime, timedelta
 
 import pandas as pd
 import requests
@@ -25,9 +26,11 @@ def _get_base_url() -> str:
 def fetch_bars(ticker: str, lookback: int) -> pd.DataFrame | None:
     base_url = _get_base_url()
     url = f"{base_url}/v2/stocks/{ticker}/bars"
+    start_date = (datetime.now() - timedelta(days=int(lookback * 1.7))).strftime("%Y-%m-%d")
     params = {
         "timeframe": "1Day",
         "limit": lookback,
+        "start": start_date,
         "adjustment": "split",
         "sort": "asc",
     }
