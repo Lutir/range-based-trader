@@ -400,7 +400,46 @@ Not a trading backtest — a structure-persistence test. Reports what % of "exce
 
 ---
 
-## Chart Export
+## Dashboard (Streamlit UI)
+
+A full web interface that replaces the CLI for everyday use.
+
+```bash
+streamlit run src/range_scanner/dashboard/app.py
+```
+
+### Pages
+
+```
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                                                                 │
+    │  SCANNER                                                        │
+    │  Pick a universe, set filters, click scan.                      │
+    │  Interactive sortable table with all metrics.                   │
+    │  Paste custom tickers or use built-in universes.                │
+    │                                                                 │
+    │  TICKER DETAIL                                                  │
+    │  Deep dive on any single ticker.                                │
+    │  All scores, metrics, chart, score breakdown table.             │
+    │                                                                 │
+    │  CHARTS                                                         │
+    │  Gallery view of exported PNG charts.                           │
+    │                                                                 │
+    │  BACKTEST                                                       │
+    │  Run structure persistence tests from the UI.                   │
+    │  See what % of "excellent" picks actually held.                 │
+    │                                                                 │
+    │  SETTINGS                                                       │
+    │  Configure API keys and scanner thresholds.                     │
+    │                                                                 │
+    └─────────────────────────────────────────────────────────────────┘
+```
+
+Japandi-styled: warm linen background, clean typography, minimal borders.
+
+---
+
+## Chart Export (CLI)
 
 Charts use a Japandi-inspired palette — warm linen backgrounds, sage green up-candles, terracotta down-candles.
 
