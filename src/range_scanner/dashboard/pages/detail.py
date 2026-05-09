@@ -16,7 +16,7 @@ from range_scanner.indicators import (
 from range_scanner.structure import detect_range_structure
 from range_scanner.scoring import compute_score, compute_sub_scores, classify_verdict, generate_reason
 from range_scanner.state import compute_position_in_range, classify_edge_position, assess_breakout_risk, compute_entry_quality
-from range_scanner.models import Verdict, EdgePosition
+from range_scanner.models import Verdict, EdgePosition, BreakoutRisk
 
 
 def render():
@@ -77,12 +77,16 @@ def render():
 
     st.markdown("---")
 
-    # Header with price
+    # Header with price (Rule 1: monospace for numbers, Rule 46: timestamp)
+    from datetime import datetime
     st.markdown(f"""
-    <div style="display: flex; align-items: baseline; gap: 16px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px;">
         <h1 style="margin: 0; padding: 0; border: none;">{ticker}</h1>
-        <span style="font-size: 1.6rem; font-weight: 300; color: #4A4540;">${latest_close:.2f}</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 400; color: #4A4540;">${latest_close:.2f}</span>
     </div>
+    <p style="color: #B8B2A8; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; margin-top: 0;">
+        Analyzed: {datetime.now().strftime("%Y-%m-%d %H:%M")} · {lookback} trading days
+    </p>
     """, unsafe_allow_html=True)
 
     if structure is None:
@@ -146,13 +150,27 @@ def render():
     )
     narrative = generate_narrative(narrative_result)
 
+    # Rule 48: Risk above fold — show warning if HIGH risk
+    if b_risk == BreakoutRisk.HIGH or gap_freq > 0.20 or comp_label == "COMPRESSING":
+        risk_items = []
+        if b_risk == BreakoutRisk.HIGH:
+            risk_items.append("High breakout risk")
+        if gap_freq > 0.20:
+            risk_items.append(f"Frequent gaps ({gap_freq:.0%})")
+        if comp_label == "COMPRESSING":
+            risk_items.append("Volatility compressing")
+        st.markdown(f"""
+        <div style="background: #FFF3CD; border-left: 3px solid #C27D5E; padding: 12px 20px;
+                    border-radius: 0 8px 8px 0; margin: 8px 0; font-size: 0.85rem; color: #664D03;">
+            <strong>Risk:</strong> {" · ".join(risk_items)}
+        </div>
+        """, unsafe_allow_html=True)
+
     st.markdown("## Analysis")
-    st.markdown(f"""
-    <div style="background: #F5F2EE; border-left: 3px solid #5B8A72; padding: 20px 24px;
-                border-radius: 0 10px 10px 0; margin: 16px 0; line-height: 1.8; color: #2D2A26; font-size: 0.95rem;">
-        {narrative}
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f'<div class="narrative-block">{narrative}</div>', unsafe_allow_html=True)
+
+    # Rule 50: Disclaimer near results
+    st.markdown('<p style="color: #B8B2A8; font-size: 0.75rem; margin-top: -8px;">Scores indicate structural quality, not trading recommendations.</p>', unsafe_allow_html=True)
 
     # Three main scores
     st.markdown("## Scores")

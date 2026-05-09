@@ -251,6 +251,9 @@ def render():
 
         progress.empty()
         st.session_state["scan_results"] = results
+        # Rule 46: timestamp on all market data
+        from datetime import datetime
+        st.session_state["scan_timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     # Display results
     if "scan_results" in st.session_state:
@@ -259,6 +262,11 @@ def render():
         skipped = [r for r in results if r.skip_reason != ""]
 
         st.markdown("---")
+
+        # Rule 46: Show when data was fetched
+        ts = st.session_state.get("scan_timestamp", "")
+        st.markdown(f'<p style="color: #B8B2A8; font-size: 0.75rem; font-family: \'JetBrains Mono\', monospace;">Last scanned: {ts}</p>', unsafe_allow_html=True)
+
         st.markdown("### Results Overview")
 
         # Summary metrics
