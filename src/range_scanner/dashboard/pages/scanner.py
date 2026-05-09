@@ -7,7 +7,7 @@ import pandas as pd
 from pathlib import Path
 
 from range_scanner.config import ScannerConfig
-from range_scanner.data import fetch_bars
+from range_scanner.data import fetch_bars, fetch_bars_batch
 from range_scanner.indicators import (
     compute_adx, compute_atr_pct, compute_compression_ratio,
     compute_ema_slope_pct, compute_gap_stats,
@@ -234,11 +234,15 @@ def render():
             ticker_path = _UNIVERSES_DIR / f"{universe}.txt"
             ticker_list = _load_tickers(ticker_path)
 
-        progress = st.progress(0, text="Starting scan...")
-        results: list[TickerScanResult] = []
+        # Phase 1: Fetch all data concurrently (the slow part)
+        progress = st.progress(0, text="Fetching market data (parallel)...")
+        all_data = fetch_bars_batch(ticker_list, lookback, max_workers=10)
+        progress.progress(0.7, text="Analyzing structures...")
 
+        # Phase 2: Analyze each ticker (fast, CPU-only)
+        results: list[TickerScanResult] = []
         for i, ticker in enumerate(ticker_list):
-            progress.progress((i + 1) / len(ticker_list), text=f"Scanning {ticker} ({i+1}/{len(ticker_list)})...")
+            progress.progress(0.7 + 0.3 * (i + 1) / len(ticker_list), text=f"Analyzing {ticker}...")
             try:
                 result = _scan_single(ticker, config)
             except Exception as e:
