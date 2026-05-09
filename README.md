@@ -300,6 +300,48 @@ When `--context` is enabled, each ticker gets a setup classification:
 
 ---
 
+## Risk Layers
+
+### Gap Frequency
+
+Stocks that frequently gap overnight are unreliable for range trading because support/resistance becomes less meaningful when price teleports past zones.
+
+```
+    gap_frequency = % of days with >2% overnight gap
+
+    >15%  = "frequent gaps" — flag in reason
+    8-15% = "moderate gap risk" — warning
+    <8%   = acceptable
+```
+
+### Volatility Compression / Expansion
+
+Measures ATR(5) / ATR(20) to detect whether a stock is coiling (pre-breakout) or becoming chaotic.
+
+```
+    ratio < 0.7  = COMPRESSING  (volatility coiling — breakout imminent?)
+    0.7 - 1.3    = NORMAL
+    ratio > 1.3  = EXPANDING   (becoming unstable)
+
+    Compressing near resistance = breakout coil (watch for upside)
+    Compressing near support    = breakdown coil (watch for downside)
+    Expanding anywhere          = unstable for range trading
+```
+
+### Earnings Risk
+
+Uses yfinance to check next earnings date. Binary events destroy range structure.
+
+```
+    <=7 days   = HIGH RISK   (entry quality capped at 30)
+    8-14 days  = MODERATE    (caution flag)
+    >14 days   = LOW         (safe for range trading)
+
+    Example reason: "earnings in 3d (HIGH RISK)"
+```
+
+---
+
 ## Chart Export
 
 Charts use a Japandi-inspired palette — warm linen backgrounds, sage green up-candles, terracotta down-candles.
