@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add -A && git commit *)",
+      "Bash(git add * && git commit *)",
+      "Bash(git commit -m *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(mkdir *)",
+      "Bash(pip install *)",
+      "Bash(python -m pytest *)",
+      "Bash(python -m range_scanner *)",
+      "Bash(python3 -m pytest *)",
+      "Bash(rm -f charts/*)",
+      "Bash(rm -f results/*)",
+      "WebFetch(domain:docs.alpaca.markets)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:finnhub.io)"
+    ]
+  }
+}
