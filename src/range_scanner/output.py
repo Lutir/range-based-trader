@@ -9,8 +9,9 @@ from range_scanner.models import TickerScanResult
 console = Console()
 
 CSV_COLUMNS = [
-    "ticker", "score", "verdict", "structure_score", "regime_score", "liquidity_score",
-    "support", "resistance", "range_width_pct",
+    "ticker", "score", "verdict", "entry_quality", "edge_position", "breakout_risk",
+    "structure_score", "regime_score", "liquidity_score",
+    "support", "resistance", "range_width_pct", "position_in_range",
     "support_touches", "resistance_touches", "containment_ratio",
     "rotation_count", "tightness", "trend_leakage",
     "adx_14", "atr_pct", "ema20_slope_pct", "avg_volume_20", "avg_dollar_volume_20",
@@ -27,12 +28,16 @@ def write_csv(results: list[TickerScanResult], path: Path) -> None:
                 "ticker": r.ticker,
                 "score": r.score,
                 "verdict": r.verdict.value,
+                "entry_quality": r.entry_quality if r.entry_quality is not None else "",
+                "edge_position": r.edge_position.value if r.edge_position else "",
+                "breakout_risk": r.breakout_risk.value if r.breakout_risk else "",
                 "structure_score": r.structure_score if r.structure_score is not None else "",
                 "regime_score": r.regime_score if r.regime_score is not None else "",
                 "liquidity_score": r.liquidity_score if r.liquidity_score is not None else "",
                 "support": r.support if r.support is not None else "",
                 "resistance": r.resistance if r.resistance is not None else "",
                 "range_width_pct": r.range_width_pct if r.range_width_pct is not None else "",
+                "position_in_range": r.position_in_range if r.position_in_range is not None else "",
                 "support_touches": r.support_touches if r.support_touches is not None else "",
                 "resistance_touches": r.resistance_touches if r.resistance_touches is not None else "",
                 "containment_ratio": r.containment_ratio if r.containment_ratio is not None else "",
@@ -72,19 +77,21 @@ def print_summary(results: list[TickerScanResult], top: int, total_scanned: int)
     table.add_column("#", style="dim", width=3)
     table.add_column("Ticker", style="bold", width=6)
     table.add_column("Score", width=5)
-    table.add_column("Str/Reg/Liq", width=12)
-    table.add_column("Verdict", width=18)
+    table.add_column("Entry", width=5)
+    table.add_column("Verdict", width=22)
+    table.add_column("Edge", width=16)
+    table.add_column("Risk", width=4)
     table.add_column("Range", width=14)
-    table.add_column("Rot", width=3)
     table.add_column("Reason")
 
     for i, r in enumerate(ranked, 1):
         range_str = f"{r.support:.1f}–{r.resistance:.1f}" if r.support and r.resistance else "N/A"
-        sub = f"{r.structure_score:.0f}/{r.regime_score:.0f}/{r.liquidity_score:.0f}" if r.structure_score is not None else "–"
-        rot_str = str(r.rotation_count) if r.rotation_count is not None else "–"
+        entry_str = f"{r.entry_quality:.0f}" if r.entry_quality is not None else "–"
+        edge_str = r.edge_position.value.replace("_", " ") if r.edge_position else "–"
+        risk_str = r.breakout_risk.value if r.breakout_risk else "–"
         table.add_row(
-            str(i), r.ticker, f"{r.score:.0f}", sub,
-            r.verdict.value, range_str, rot_str, r.reason,
+            str(i), r.ticker, f"{r.score:.0f}", entry_str,
+            r.verdict.value, edge_str, risk_str, range_str, r.reason,
         )
 
     console.print(table)

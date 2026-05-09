@@ -7,9 +7,10 @@ import typer
 from range_scanner.config import ScannerConfig
 from range_scanner.data import fetch_bars
 from range_scanner.indicators import compute_adx, compute_atr_pct, compute_ema_slope_pct
-from range_scanner.models import TickerScanResult, Verdict
+from range_scanner.models import BreakoutRisk, EdgePosition, TickerScanResult, Verdict
 from range_scanner.output import console, print_summary, write_csv
 from range_scanner.scoring import classify_verdict, compute_score, compute_sub_scores, generate_reason
+from range_scanner.state import assess_breakout_risk, classify_edge_position, compute_entry_quality, compute_position_in_range
 from range_scanner.structure import detect_range_structure
 
 app = typer.Typer(help="Range Candidate Scanner")
@@ -114,6 +115,12 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> tuple[TickerScanResult, 
             skip_reason="No clear range structure detected",
         ), df
 
+    # Edge position and state classification
+    position = compute_position_in_range(latest_close, structure.support, structure.resistance)
+    edge_pos = classify_edge_position(position)
+    b_risk = assess_breakout_risk(df, position, structure.support, structure.resistance)
+    entry_qual = compute_entry_quality(position, edge_pos, b_risk)
+
     # Recent validity check
     validity_status, recent_containment = _check_recent_validity(
         df["close"], structure.support, structure.resistance
@@ -131,25 +138,27 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> tuple[TickerScanResult, 
     verdict = classify_verdict(
         score, adx_val, ema_slope,
         structure.trend_leakage, structure.range_width_pct, structure.rotation_count,
+        edge_position=edge_pos, breakout_risk=b_risk,
     )
     risk_note = _compute_risk_note(df["close"], structure.support, structure.resistance)
     structure_score, regime_score, liquidity_sc = compute_sub_scores(breakdown)
-    reason = generate_reason(structure, adx_val, ema_slope, verdict)
+    reason = generate_reason(
+        structure, adx_val, ema_slope, verdict,
+        edge_position=edge_pos, entry_quality=entry_qual, breakout_risk=b_risk,
+    )
 
-    # Append validity status to reason if range is degraded
-    if validity_status == "BROKEN_UP":
-        reason += "; BROKEN above resistance"
-        risk_note = "BROKEN_UP"
-    elif validity_status == "BROKEN_DOWN":
-        reason += "; BROKEN below support"
-        risk_note = "BROKEN_DOWN"
-    elif validity_status == "STALE_RANGE":
+    # Append validity note if stale
+    if validity_status == "STALE_RANGE" and edge_pos not in (EdgePosition.BROKEN_UP, EdgePosition.BROKEN_DOWN):
         reason += f"; stale (recent containment {recent_containment:.0%})"
 
     return TickerScanResult(
         ticker=ticker,
         score=round(score, 2),
         verdict=verdict,
+        entry_quality=entry_qual,
+        position_in_range=round(position, 3),
+        edge_position=edge_pos,
+        breakout_risk=b_risk,
         support=structure.support,
         resistance=structure.resistance,
         range_width_pct=structure.range_width_pct,

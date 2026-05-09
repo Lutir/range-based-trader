@@ -214,8 +214,18 @@ def compute_sub_scores(breakdown: ScoreBreakdown) -> tuple[float, float, float]:
 def classify_verdict(
     score: float, adx: float, ema_slope_pct: float,
     trend_leakage: float, range_width_pct: float, rotation_count: int,
+    edge_position: "EdgePosition | None" = None,
+    breakout_risk: "BreakoutRisk | None" = None,
 ) -> Verdict:
-    # Hard gates first
+    from range_scanner.models import BreakoutRisk, EdgePosition
+
+    # Hard gates first — broken ranges
+    if edge_position == EdgePosition.BROKEN_UP:
+        return Verdict.BROKEN_UP
+    if edge_position == EdgePosition.BROKEN_DOWN:
+        return Verdict.BROKEN_DOWN
+
+    # Trend gates
     if adx > 30 or abs(ema_slope_pct) > 6 or trend_leakage > 0.5:
         return Verdict.TRENDING_NOT_RANGE
     if range_width_pct > 25:
@@ -223,7 +233,14 @@ def classify_verdict(
     if range_width_pct > 15:
         return Verdict.WIDE_RANGE
 
-    # Score-based classification
+    # Score-based classification with edge awareness
+    is_good_range = score >= 55 and rotation_count >= 3
+
+    if is_good_range and edge_position == EdgePosition.NEAR_RESISTANCE:
+        return Verdict.RANGE_PRESSING_RESISTANCE
+    if is_good_range and edge_position == EdgePosition.NEAR_SUPPORT:
+        return Verdict.RANGE_PRESSING_SUPPORT
+
     if score >= 75 and adx < 25 and rotation_count >= 3:
         return Verdict.EXCELLENT_RANGE
     if score >= 55:
@@ -234,9 +251,13 @@ def classify_verdict(
 
 
 def generate_reason(
-    structure: RangeStructure, adx: float, ema_slope_pct: float, verdict: Verdict
+    structure: RangeStructure, adx: float, ema_slope_pct: float, verdict: Verdict,
+    edge_position: "EdgePosition | None" = None, entry_quality: float | None = None,
+    breakout_risk: "BreakoutRisk | None" = None,
 ) -> str:
     """Generate human-readable explanation for the verdict."""
+    from range_scanner.models import BreakoutRisk, EdgePosition
+
     parts: list[str] = []
 
     if structure.rotation_count >= 5:
@@ -268,5 +289,28 @@ def generate_reason(
         parts.append("strong reactions")
     elif avg_reaction < 0.5:
         parts.append("weak reactions")
+
+    # Edge position context
+    if edge_position == EdgePosition.BROKEN_UP:
+        parts.append("BROKEN above resistance")
+    elif edge_position == EdgePosition.BROKEN_DOWN:
+        parts.append("BROKEN below support")
+    elif edge_position == EdgePosition.NEAR_RESISTANCE:
+        parts.append("price near resistance")
+    elif edge_position == EdgePosition.NEAR_SUPPORT:
+        parts.append("price near support")
+    elif edge_position == EdgePosition.MID_RANGE:
+        parts.append("price mid-range (wait for edge)")
+
+    if breakout_risk == BreakoutRisk.HIGH:
+        parts.append("breakout risk HIGH")
+    elif breakout_risk == BreakoutRisk.MODERATE:
+        parts.append("breakout risk moderate")
+
+    if entry_quality is not None:
+        if entry_quality >= 70:
+            parts.append(f"entry quality strong ({entry_quality:.0f})")
+        elif entry_quality <= 30:
+            parts.append(f"entry not ideal ({entry_quality:.0f})")
 
     return "; ".join(parts)

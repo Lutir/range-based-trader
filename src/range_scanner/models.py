@@ -4,14 +4,35 @@ from pydantic import BaseModel
 
 class Verdict(str, Enum):
     EXCELLENT_RANGE = "EXCELLENT_RANGE"
+    RANGE_PRESSING_RESISTANCE = "RANGE_PRESSING_RESISTANCE"
+    RANGE_PRESSING_SUPPORT = "RANGE_PRESSING_SUPPORT"
     WATCHLIST = "WATCHLIST"
     WIDE_RANGE = "WIDE_RANGE"
     MESSY_RANGE = "MESSY_RANGE"
+    BROKEN_UP = "BROKEN_UP"
+    BROKEN_DOWN = "BROKEN_DOWN"
     TOO_WIDE = "TOO_WIDE"
     TRENDING_NOT_RANGE = "TRENDING_NOT_RANGE"
     ILLIQUID = "ILLIQUID"
     INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
     ERROR = "ERROR"
+
+
+class EdgePosition(str, Enum):
+    NEAR_SUPPORT = "NEAR_SUPPORT"
+    LOWER_HALF = "LOWER_HALF"
+    MID_RANGE = "MID_RANGE"
+    UPPER_HALF = "UPPER_HALF"
+    NEAR_RESISTANCE = "NEAR_RESISTANCE"
+    BROKEN_UP = "BROKEN_UP"
+    BROKEN_DOWN = "BROKEN_DOWN"
+
+
+class BreakoutRisk(str, Enum):
+    LOW = "LOW"
+    MODERATE = "MODERATE"
+    HIGH = "HIGH"
+    NA = "N/A"
 
 
 class RangeStructure(BaseModel):
@@ -48,6 +69,12 @@ class TickerScanResult(BaseModel):
     ticker: str
     score: float = 0.0
     verdict: Verdict = Verdict.ERROR
+    # Range state
+    entry_quality: float | None = None
+    position_in_range: float | None = None
+    edge_position: EdgePosition | None = None
+    breakout_risk: BreakoutRisk = BreakoutRisk.NA
+    # Structure
     support: float | None = None
     resistance: float | None = None
     range_width_pct: float | None = None
