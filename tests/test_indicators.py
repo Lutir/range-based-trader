@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from range_scanner.indicators import compute_adx, compute_atr, compute_atr_pct, compute_ema, compute_ema_slope_pct, compute_gap_stats
+from range_scanner.indicators import compute_adx, compute_atr, compute_atr_pct, compute_compression_ratio, compute_ema, compute_ema_slope_pct, compute_gap_stats
 
 
 def _make_flat_series(n: int = 100, base: float = 100.0, noise: float = 1.0) -> pd.DataFrame:
@@ -68,6 +68,26 @@ class TestEMA:
         slope = compute_ema_slope_pct(df["close"], period=20, slope_window=20)
         assert slope is not None
         assert slope > 5.0
+
+
+class TestCompression:
+    def test_normal_volatility(self):
+        df = _make_flat_series(n=100, noise=1.0)
+        ratio, label = compute_compression_ratio(df["high"], df["low"], df["close"])
+        assert 0.5 < ratio < 1.5
+        assert label in ("NORMAL", "COMPRESSING", "EXPANDING")
+
+    def test_compressing(self):
+        np.random.seed(10)
+        n = 60
+        close = np.full(n, 100.0)
+        noise = np.concatenate([np.random.randn(40) * 3, np.random.randn(20) * 0.3])
+        close = close + noise
+        high = close + abs(np.concatenate([np.random.randn(40) * 2, np.random.randn(20) * 0.2]))
+        low = close - abs(np.concatenate([np.random.randn(40) * 2, np.random.randn(20) * 0.2]))
+        ratio, label = compute_compression_ratio(pd.Series(high), pd.Series(low), pd.Series(close))
+        assert ratio < 0.8
+        assert label == "COMPRESSING"
 
 
 class TestGapStats:

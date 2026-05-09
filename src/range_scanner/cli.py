@@ -6,7 +6,7 @@ import typer
 
 from range_scanner.config import ScannerConfig
 from range_scanner.data import fetch_bars
-from range_scanner.indicators import compute_adx, compute_atr_pct, compute_ema_slope_pct, compute_gap_stats
+from range_scanner.indicators import compute_adx, compute_atr_pct, compute_compression_ratio, compute_ema_slope_pct, compute_gap_stats
 from range_scanner.models import BreakoutRisk, EdgePosition, TickerScanResult, Verdict
 from range_scanner.output import console, print_summary, write_csv
 from range_scanner.scoring import classify_verdict, compute_score, compute_sub_scores, generate_reason
@@ -105,6 +105,7 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> tuple[TickerScanResult, 
         ema_slope = 0.0
 
     gap_freq, avg_gap, max_gap = compute_gap_stats(df["open"], df["close"])
+    compression_ratio, compression_label = compute_compression_ratio(df["high"], df["low"], df["close"])
 
     structure = detect_range_structure(df, config)
     if structure is None:
@@ -159,6 +160,17 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> tuple[TickerScanResult, 
     elif gap_freq > 0.08:
         reason += f"; moderate gap risk ({gap_freq:.0%})"
 
+    # Compression note
+    if compression_label == "COMPRESSING":
+        if edge_pos == EdgePosition.NEAR_RESISTANCE:
+            reason += "; volatility compressing near resistance (breakout coil)"
+        elif edge_pos == EdgePosition.NEAR_SUPPORT:
+            reason += "; volatility compressing near support (breakdown coil)"
+        else:
+            reason += "; volatility compressing"
+    elif compression_label == "EXPANDING":
+        reason += "; volatility expanding (unstable)"
+
     return TickerScanResult(
         ticker=ticker,
         score=round(score, 2),
@@ -184,6 +196,8 @@ def _scan_ticker(ticker: str, config: ScannerConfig) -> tuple[TickerScanResult, 
         trend_leakage=structure.trend_leakage,
         gap_frequency=round(gap_freq, 4),
         avg_gap_pct=round(avg_gap, 2),
+        compression_ratio=compression_ratio,
+        compression_label=compression_label,
         structure_score=structure_score,
         regime_score=regime_score,
         liquidity_score=liquidity_sc,

@@ -52,6 +52,29 @@ def compute_atr_pct(high: pd.Series, low: pd.Series, close: pd.Series, period: i
     return latest_atr / latest_close * 100
 
 
+def compute_compression_ratio(high: pd.Series, low: pd.Series, close: pd.Series) -> tuple[float, str]:
+    """Compute ATR(5) / ATR(20) to detect volatility compression/expansion.
+    Returns (ratio, label). Ratio < 0.7 = compressing, > 1.3 = expanding."""
+    atr_5 = compute_atr(high, low, close, period=5)
+    atr_20 = compute_atr(high, low, close, period=20)
+    latest_5 = atr_5.iloc[-1]
+    latest_20 = atr_20.iloc[-1]
+
+    if pd.isna(latest_5) or pd.isna(latest_20) or latest_20 <= 0:
+        return 1.0, "NORMAL"
+
+    ratio = latest_5 / latest_20
+
+    if ratio < 0.7:
+        label = "COMPRESSING"
+    elif ratio > 1.3:
+        label = "EXPANDING"
+    else:
+        label = "NORMAL"
+
+    return round(ratio, 3), label
+
+
 def compute_gap_stats(open_prices: pd.Series, close: pd.Series, threshold_pct: float = 2.0) -> tuple[float, float, float]:
     """Compute gap statistics from open vs prior close.
     Returns (gap_frequency, avg_gap_pct, max_gap_pct).
