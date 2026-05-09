@@ -59,6 +59,7 @@ class RangeStructure(BaseModel):
     trend_leakage: float = 0.0
     resistance_false_breaks: int = 0
     support_false_breaks: int = 0
+    volume_profile: str = "UNKNOWN"
 
 
 class ScoreBreakdown(BaseModel):

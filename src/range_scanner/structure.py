@@ -174,6 +174,66 @@ def detect_higher_highs_lows(pivot_highs: list[tuple[int, float]], pivot_lows: l
     return max(up_leakage, down_leakage)
 
 
+def compute_volume_profile(df: pd.DataFrame, support: float, resistance: float, num_buckets: int = 5) -> str:
+    """Approximate volume profile — where is most trading volume concentrated?
+
+    WHAT IS A VOLUME PROFILE?
+    Instead of showing volume per DAY (time), it shows volume per PRICE LEVEL.
+    This tells you where most trading happened — the "accepted" price zone.
+
+    ANALOGY: Imagine a parking garage with 5 floors.
+    Volume profile shows which floors have the most cars parked.
+    If floor 3 (middle) has the most cars → balanced auction.
+    If floor 1 (support) has the most cars → heavy interest at support.
+
+    HOW IT WORKS:
+    1. Divide the range into equal price buckets (like floors)
+    2. For each candle, assign its volume to the bucket where its typical price falls
+    3. See which bucket(s) have the most volume
+
+    LABELS:
+    - BALANCED: Volume spread evenly → healthy range, clear acceptance
+    - HIGH_AT_SUPPORT: Most volume near support → strong floor
+    - HIGH_AT_RESISTANCE: Most volume near resistance → strong ceiling
+    - THIN_MIDDLE: Volume concentrated at edges, thin in middle → could break easily
+
+    Returns a label string.
+    """
+    if resistance <= support or len(df) < 10:
+        return "UNKNOWN"
+
+    range_size = resistance - support
+    bucket_size = range_size / num_buckets
+    bucket_volumes = [0.0] * num_buckets
+
+    for _, row in df.iterrows():
+        typical_price = (row["high"] + row["low"] + row["close"]) / 3
+        if typical_price < support or typical_price > resistance:
+            continue
+        bucket_idx = min(int((typical_price - support) / bucket_size), num_buckets - 1)
+        bucket_volumes[bucket_idx] += row["volume"]
+
+    total_vol = sum(bucket_volumes)
+    if total_vol == 0:
+        return "UNKNOWN"
+
+    # Normalize to percentages
+    pcts = [v / total_vol for v in bucket_volumes]
+
+    # Determine profile shape
+    bottom_third = sum(pcts[:num_buckets // 3 + 1])
+    top_third = sum(pcts[-(num_buckets // 3 + 1):])
+    middle = sum(pcts[num_buckets // 3 + 1:-(num_buckets // 3 + 1)]) if num_buckets > 3 else pcts[num_buckets // 2]
+
+    if bottom_third > 0.45:
+        return "HIGH_AT_SUPPORT"
+    if top_third > 0.45:
+        return "HIGH_AT_RESISTANCE"
+    if middle < 0.15 and (bottom_third > 0.35 or top_third > 0.35):
+        return "THIN_MIDDLE"
+    return "BALANCED"
+
+
 def detect_false_breaks(df: pd.DataFrame, support: float, resistance: float, tolerance_pct: float) -> tuple[int, int]:
     """Count false breakouts — price breaks a level then closes back inside.
 
@@ -263,6 +323,7 @@ def detect_range_structure(df: pd.DataFrame, config: ScannerConfig) -> RangeStru
     tightness = compute_range_tightness(close, support, resistance)
     trend_leakage = detect_higher_highs_lows(pivot_highs, pivot_lows)
     res_false_breaks, sup_false_breaks = detect_false_breaks(df, support, resistance, tolerance_pct)
+    vol_profile = compute_volume_profile(df, support, resistance)
 
     return RangeStructure(
         support=round(support, 2),
@@ -278,4 +339,5 @@ def detect_range_structure(df: pd.DataFrame, config: ScannerConfig) -> RangeStru
         trend_leakage=round(trend_leakage, 4),
         resistance_false_breaks=res_false_breaks,
         support_false_breaks=sup_false_breaks,
+        volume_profile=vol_profile,
     )

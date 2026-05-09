@@ -297,6 +297,16 @@ def generate_reason(
     elif total_traps >= 1:
         parts.append(f"{total_traps} false break(s)")
 
+    # Volume profile
+    if structure.volume_profile != "UNKNOWN":
+        profile_labels = {
+            "BALANCED": "volume balanced (healthy)",
+            "HIGH_AT_SUPPORT": "volume concentrated at support",
+            "HIGH_AT_RESISTANCE": "volume concentrated at resistance",
+            "THIN_MIDDLE": "thin volume mid-range",
+        }
+        parts.append(profile_labels.get(structure.volume_profile, structure.volume_profile))
+
     # Edge position context
     if edge_position == EdgePosition.BROKEN_UP:
         parts.append("BROKEN above resistance")
