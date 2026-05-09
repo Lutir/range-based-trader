@@ -12,7 +12,8 @@
       "Bash(pip install *)",
       "Bash(xargs ls -t)",
       "Bash(awk '{print $1\" \"$2}')",
-      "Bash(awk '{print $NF, $5}')"
+      "Bash(awk '{print $NF, $5}')",
+      "Bash(npx --version)"
     ]
   }
 }

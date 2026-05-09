@@ -15,7 +15,22 @@
       "Bash(rm -f results/*)",
       "WebFetch(domain:docs.alpaca.markets)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:finnhub.io)"
+      "WebFetch(domain:finnhub.io)",
+      "mcp__memory__*",
+      "mcp__brave-search__*"
     ]
+  },
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": ""
+      }
+    }
   }
 }
