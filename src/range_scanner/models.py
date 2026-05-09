@@ -35,6 +35,16 @@ class BreakoutRisk(str, Enum):
     NA = "N/A"
 
 
+class SetupType(str, Enum):
+    MEAN_REVERSION_LONG = "MEAN_REVERSION_LONG"
+    MEAN_REVERSION_SHORT = "MEAN_REVERSION_SHORT"
+    BREAKOUT_WATCH_UPSIDE = "BREAKOUT_WATCH_UPSIDE"
+    BREAKDOWN_WATCH_DOWNSIDE = "BREAKDOWN_WATCH_DOWNSIDE"
+    RANGE_MONITOR_ONLY = "RANGE_MONITOR_ONLY"
+    AVOID_CONTEXT_CONFLICT = "AVOID_CONTEXT_CONFLICT"
+    NOT_RANGE_TRADE = "NOT_RANGE_TRADE"
+
+
 class RangeStructure(BaseModel):
     support: float
     resistance: float
@@ -69,6 +79,9 @@ class TickerScanResult(BaseModel):
     ticker: str
     score: float = 0.0
     verdict: Verdict = Verdict.ERROR
+    # Setup classification
+    setup_type: SetupType = SetupType.NOT_RANGE_TRADE
+    context_score: float | None = None
     # Range state
     entry_quality: float | None = None
     position_in_range: float | None = None

@@ -270,6 +270,8 @@ def scan(
                     get_sector_etf, fetch_sector_regime, compute_relative_strength,
                     SectorRegime,
                 )
+                from range_scanner.setup import classify_setup, compute_context_score
+
                 sector_etf = get_sector_etf(ticker)
 
                 # Cache sector lookups
@@ -282,8 +284,18 @@ def scan(
                 if spy_df is not None:
                     rs_20 = compute_relative_strength(df, spy_df, 20)
 
-                # Append context to reason
+                # Classify setup type
+                setup = classify_setup(
+                    result.verdict, result.edge_position, result.breakout_risk,
+                    market_regime, sec_regime, rs_20,
+                )
+                ctx_score = compute_context_score(market_regime, sec_regime, rs_20, setup)
+                result.setup_type = setup
+                result.context_score = ctx_score
+
+                # Build context reason
                 ctx_parts = []
+                ctx_parts.append(f"setup: {setup.value.replace('_', ' ').lower()}")
                 ctx_parts.append(f"market {market_regime.value.replace('_', ' ').lower()}")
                 ctx_parts.append(f"sector ({sector_etf}) {sec_regime.value.replace('_', ' ').lower()}")
                 if rs_20 > 3:

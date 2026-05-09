@@ -9,7 +9,8 @@ from range_scanner.models import TickerScanResult
 console = Console()
 
 CSV_COLUMNS = [
-    "ticker", "score", "verdict", "entry_quality", "edge_position", "breakout_risk",
+    "ticker", "score", "verdict", "setup_type", "context_score",
+    "entry_quality", "edge_position", "breakout_risk",
     "structure_score", "regime_score", "liquidity_score",
     "support", "resistance", "range_width_pct", "position_in_range",
     "support_touches", "resistance_touches", "containment_ratio",
@@ -28,6 +29,8 @@ def write_csv(results: list[TickerScanResult], path: Path) -> None:
                 "ticker": r.ticker,
                 "score": r.score,
                 "verdict": r.verdict.value,
+                "setup_type": r.setup_type.value if r.setup_type else "",
+                "context_score": r.context_score if r.context_score is not None else "",
                 "entry_quality": r.entry_quality if r.entry_quality is not None else "",
                 "edge_position": r.edge_position.value if r.edge_position else "",
                 "breakout_risk": r.breakout_risk.value if r.breakout_risk else "",
@@ -76,22 +79,23 @@ def print_summary(results: list[TickerScanResult], top: int, total_scanned: int)
     table = Table(title="Top Range Candidates", show_lines=True)
     table.add_column("#", style="dim", width=3)
     table.add_column("Ticker", style="bold", width=6)
-    table.add_column("Score", width=5)
-    table.add_column("Entry", width=5)
-    table.add_column("Verdict", width=22)
+    table.add_column("Rng", width=4)
+    table.add_column("Ent", width=4)
+    table.add_column("Ctx", width=4)
+    table.add_column("Setup", width=22)
     table.add_column("Edge", width=16)
-    table.add_column("Risk", width=4)
     table.add_column("Range", width=14)
     table.add_column("Reason")
 
     for i, r in enumerate(ranked, 1):
         range_str = f"{r.support:.1f}–{r.resistance:.1f}" if r.support and r.resistance else "N/A"
         entry_str = f"{r.entry_quality:.0f}" if r.entry_quality is not None else "–"
+        ctx_str = f"{r.context_score:.0f}" if r.context_score is not None else "–"
         edge_str = r.edge_position.value.replace("_", " ") if r.edge_position else "–"
-        risk_str = r.breakout_risk.value if r.breakout_risk else "–"
+        setup_str = r.setup_type.value.replace("_", " ") if r.setup_type else "–"
         table.add_row(
-            str(i), r.ticker, f"{r.score:.0f}", entry_str,
-            r.verdict.value, edge_str, risk_str, range_str, r.reason,
+            str(i), r.ticker, f"{r.score:.0f}", entry_str, ctx_str,
+            setup_str, edge_str, range_str, r.reason,
         )
 
     console.print(table)
